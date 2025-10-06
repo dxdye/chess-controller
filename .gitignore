@@ -1,0 +1,10 @@
+/node_modules
+
+
+*.txt
+*.ps1
+dist
+/build
+
+.env
+.env.local
