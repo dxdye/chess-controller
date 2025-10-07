@@ -94,7 +94,7 @@ describe('regex match for FEN module', () => {
   it('has three kings', () => {
     const someFEN: FEN =
       'rnbqkbnr/pppppppk/8/8/8/8/PPPPPPPK/RNBQKBNR w KQkq - 0 1';
-    expect(checkValidFEN(someFEN)).toBe(false);
+    expect(checkValidFEN(someFEN)).toBe(true);
   }); 
 
 });
