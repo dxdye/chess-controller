@@ -26,4 +26,6 @@ const checkForMaxPiecesPerRow = (position: FEN) =>
     }) ?? false
 
 export const checkValidFEN = (position: FEN) =>
-  validFEN.test(position) && checkForMaxPiecesPerRow(position) && hasOneKingPerSide(position);
+  validFEN.test(position) && 
+  checkForMaxPiecesPerRow(position) && 
+  hasOneKingPerSide(position);
