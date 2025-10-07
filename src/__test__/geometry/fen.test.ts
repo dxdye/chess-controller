@@ -18,15 +18,29 @@ describe('regex match for FEN module', () => {
   it('checks correct FEN with enpassent move to be true', () => {
     const someFEN: FEN =
       'rnbq1rk1/p1p1bppp/5n2/1pPpp3/4P3/3P1N2/PP2BPPP/RNBQ1RK1 w - d6 0 8';
-    expect(checkValidFEN(someFEN)).toBe(true);
-  });
-  it('should pass on vanished castling rights. ', () => {
-    const someFEN: FEN =
-      'rnbq1rk1/pppp1ppp/3b1n2/4p3/4P3/3P1N2/PPP1BPPP/RNBQ1RK1 b - - 4 5';
     const someFEN2: FEN =
       'rnbqkbnr/p2ppppp/1p6/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3';
     expect(checkValidFEN(someFEN)).toBe(true);
     expect(checkValidFEN(someFEN2)).toBe(true);
+  });
+  it('should pass on vanished or manipulated castling rights. ', () => {
+    const someFEN: FEN =
+      'rnbq1rk1/pppp1ppp/3b1n2/4p3/4P3/3P1N2/PPP1BPPP/RNBQ1RK1 b - - 4 5';
+    const someFEN2: FEN =
+      'rnbqkbnr/p2ppppp/1p6/2pP4/8/8/PPP1PPPP/RNBQKBNR w - c6 0 3';
+    const someFEN3: FEN =
+      'rnbq1rk1/p2p1ppp/1p1bpn2/2p5/4P3/2P2N2/PP3PPP/RNBQKB1R w KQ - 1 7';
+ 
+    const someFEN4: FEN =
+      'r1b1kbnr/ppp2ppp/2nqp3/3p4/3P4/2NQB3/PPP1PPPP/2KR1BNR b kq - 1 5'; 
+    const someFEN5: FEN =
+      'r3kr2/pppbb1pp/2nqpn2/1Q1p1p2/1P1P4/P1N1BN2/2P1PPPP/2KR1B1R w q - 3 1';
+
+    expect(checkValidFEN(someFEN)).toBe(true);
+    expect(checkValidFEN(someFEN2)).toBe(true);
+    expect(checkValidFEN(someFEN3)).toBe(true);
+    expect(checkValidFEN(someFEN4)).toBe(true);
+    expect(checkValidFEN(someFEN5)).toBe(true);
   });
   it('makes a valid FEN return true. wrong color to start with. less P filled up', () => {
     const someFEN: FEN =
