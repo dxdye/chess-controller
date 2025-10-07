@@ -14,10 +14,3 @@ export type square = {
   row: row;
   column: column;
 };
-
-export type FEN = string;
-export const initPosition: FEN =
-  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
-const validFEN = /^(?:(?:[PNBRQK]+|[1-8])\/){7}(?:[PNBRQK]+|[1-8])$/gim;
-export const checkValidFEN = (position: FEN) => validFEN.test(position);
