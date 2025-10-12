@@ -1,6 +1,6 @@
-import { FEN, isValidFEN } from './fen.ts';
+import { isValidFEN } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
-import { Board, FigureLetter, Row, Column, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
+import { FEN, Board, FigureLetter, Row, Column, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
 import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure, figureToLetter } from './transform.ts';
 
 export const positionToCoordinate = (position: Position): [CY, CX] => [
@@ -9,12 +9,12 @@ export const positionToCoordinate = (position: Position): [CY, CX] => [
 ];
 const stringToPosition = (pos: string): Position => {
   if (pos.length !== 2) throw new Error('Invalid position string');
-  const row = pos.charAt(0) as Row;
-  const column = parseInt(pos.charAt(1), 10) as Column;
-  if (!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(row) || isNaN(column) || column < 1 || column > 8) {
+  const col = pos.charAt(0) as Column;
+  const row = parseInt(pos.charAt(1), 10) as Row;
+  if (!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(col) || isNaN(row) || row < 1 || row > 8) {
     throw new Error('Invalid position string');
   }
-  return { row, column };
+  return { column: col, row: row };
 };
 
 export const createChessBoardFromFEN = (fen: FEN): Board => {
@@ -50,8 +50,8 @@ export const createChessBoardFromFEN = (fen: FEN): Board => {
 export const createFENFromChessBoard = (board: Board): FEN => {
   const rows: string[] = Array(8).fill('');
   board.forEach((square) => {
-    const rowIndex = 8 - square.column;
-    const colIndex = square.row.charCodeAt(0) - 'a'.charCodeAt(0);
+    const rowIndex = 8 - square.row;
+    const colIndex = square.column.charCodeAt(0) - 'a'.charCodeAt(0);
     rows[rowIndex] += figureToLetter({
       figure: square.figure,
       color: square.color,
@@ -98,7 +98,7 @@ export const isPositionOccupied = (board: Board, position: Position): boolean =>
 
 export const setBoardMapColor = (color: Color, boardMap: BoardColorMap, position: Position): BoardColorMap => {
   const row = rowToIndex(position.row) - 1;
-  const col = position.column - 1;
+  const col = columnToIndex(position.column) - 1;
   if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
     boardMap[row][col] = color;
   }
@@ -110,7 +110,7 @@ export const boardToPieceMap = (board: Board): (Piece | null)[][] => {
 
   board.forEach((square) => {
     const row = rowToIndex(square.row) - 1;
-    const col = square.column - 1;
+    const col = columnToIndex(square.column) - 1;
     if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
       boardMap[row][col] = { figure: square.figure, color: square.color };
     }
@@ -123,7 +123,7 @@ export const boardToColorMap = (board: Board): BoardColorMap =>
 
 export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Position): Piece | null => {
   const row = rowToIndex(position.row) - 1;
-  const col = position.column - 1;
+  const col = columnToIndex(position.column) - 1;
   if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
     return boardMap[row][col];
   }

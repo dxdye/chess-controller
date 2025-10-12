@@ -1,6 +1,6 @@
 import { isNil } from './helper.ts';
+import { FEN } from './types.ts';
 
-export type FEN = string;
 export const INIT_POSITION: FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const validFEN =

@@ -202,10 +202,15 @@ export const calculateMoveListForQueen = (from: Position, board: Board): Move[] 
   return moves;
 };
 
-export const calculateMoveListForKing = (from: Position, board: Board): Move[] => {
+export const calculateMoveListForKing = (
+  from: Position,
+  board: Board,
+  isCastlingPossible: boolean = false, //king or rook hasn't moved yet
+): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
-  const boardColorMap = boardToColorMap(board);
+  const pieceMap = boardToPieceMap(board);
+  const boardColorMap = pieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
   const kingMoves = [
     { row: 1, col: 0 },
     { row: -1, col: 0 },
@@ -239,6 +244,10 @@ export const calculateMoveListForKing = (from: Position, board: Board): Move[] =
       });
     }
   });
+  //castling logic
+  if (isCastlingPossible && !isKingChecked(board, extractPositionFromMap(boardColorMap, from))) {
+    //
+  }
 
   return moves;
 };
@@ -248,8 +257,8 @@ export const calculateMoveListForPawn = (
   board: Board,
   isEnPassentPossible: boolean = false, // is true if pawn was moved two squares in the last move
 ): Move[] => {
-  const color = board.find((square) => square.row === from.row && square.column === from.column)?.color;
-  if (isNil(color) || color === 'none') {
+  const color = board.find((square) => square.row === from.row && square.column === from.column)?.color ?? 'none';
+  if (color === 'none') {
     throw new Error('No piece found at the given position or invalid color');
   }
   const whitePawnDirections: {
@@ -299,6 +308,9 @@ export const calculateMoveListForPawn = (
       });
     }
   });
+  //2 steps forward
+  if ((color === 'white' && from.row === 2) || (color === 'black' && from.row === 7)) return moves;
+
   return moves;
 };
 
@@ -373,7 +385,7 @@ const checkDirectionForCheck = (
   return false;
 };
 
-const isKingChecked = (board: Board, color: Color): boolean => {
+export const isKingChecked = (board: Board, color: Color): boolean => {
   const pieceMap = boardToPieceMap(board);
   const kingPosition = findKingPosition(board, color);
   if (isNil(kingPosition)) {
@@ -403,8 +415,8 @@ const isKingChecked = (board: Board, color: Color): boolean => {
       { row: -1, col: -2 },
     ] as const;
 
-    if (checkDirectionForCheck(pieceMap, kingPosition, bishopDirection, color, ['BISHOP', 'QUEEN'])) return true;
     //check by bishop or queen
+    if (checkDirectionForCheck(pieceMap, kingPosition, bishopDirection, color, ['BISHOP', 'QUEEN'])) return true;
     //check by rook or queen
     if (checkDirectionForCheck(pieceMap, kingPosition, rookDirection, color, ['ROOK', 'QUEEN'])) return true;
     if (checkDirectionForCheck(pieceMap, kingPosition, knightMoves, color, ['KNIGHT'], false)) return true;
