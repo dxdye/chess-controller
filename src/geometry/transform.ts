@@ -1,7 +1,10 @@
 import { FigureLetter, Piece, Row, Column, Position, CY, CX } from './types.ts';
 import { match } from 'ts-pattern';
-export const letterToFigure = (letter: FigureLetter): Piece =>
-  match<FigureLetter, Piece>(letter)
+
+
+
+export const letterToFigure = (letter: string): Piece =>
+  match<string, Piece>(letter)
     .with('P', () => ({ figure: 'PAWN', color: 'white' }))
     .with('N', () => ({ figure: 'KNIGHT', color: 'white' }))
     .with('B', () => ({ figure: 'BISHOP', color: 'white' }))
@@ -15,7 +18,10 @@ export const letterToFigure = (letter: FigureLetter): Piece =>
     .with('r', () => ({ figure: 'ROOK', color: 'black' }))
     .with('k', () => ({ figure: 'KING', color: 'black' }))
     .with('q', () => ({ figure: 'QUEEN', color: 'black' }))
-    .exhaustive();
+    .otherwise(() => {
+      throw new Error(`Invalid figure letter: ${letter}`);
+    });
+
 export const figureToLetter = (piece: Piece): FigureLetter =>
   match<Piece, FigureLetter>(piece)
     .with({ figure: 'PAWN', color: 'white' }, () => 'P')
@@ -24,6 +30,7 @@ export const figureToLetter = (piece: Piece): FigureLetter =>
     .with({ figure: 'ROOK', color: 'white' }, () => 'R')
     .with({ figure: 'KING', color: 'white' }, () => 'K')
     .with({ figure: 'QUEEN', color: 'white' }, () => 'Q')
+
     .with({ figure: 'PAWN', color: 'black' }, () => 'p')
     .with({ figure: 'KNIGHT', color: 'black' }, () => 'n')
     .with({ figure: 'BISHOP', color: 'black' }, () => 'b')
@@ -35,7 +42,7 @@ export const figureToLetter = (piece: Piece): FigureLetter =>
     });
 
 export const coordinateToPosition = (col_x: number, row_y: number): Position => ({
-  column: match<number, Column>(row_y)
+  column: match<number, Column>(col_x)
     .with(1, () => 'a')
     .with(2, () => 'b')
     .with(3, () => 'c')
@@ -47,7 +54,7 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
     .otherwise(() => {
       throw new Error('Invalid row number');
     }),
-  row: match<number, Row>(col_x)
+  row: match<number, Row>(row_y)
     .with(1, () => 1)
     .with(2, () => 2)
     .with(3, () => 3)
@@ -57,7 +64,7 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
     .with(7, () => 7)
     .with(8, () => 8)
     .otherwise(() => {
-      throw new Error('Invalid column number');
+      throw new Error(`Invalid column number ${col_x}`);
     }),
 });
 export const columnToIndex = (col: Column): CX =>

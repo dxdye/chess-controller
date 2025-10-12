@@ -3,7 +3,7 @@ import { Fen } from './types.ts';
 
 export const INIT_POSITION: Fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-const validFEN =
+const validFen =
   /\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4}|-)\s(-|[a-h][1-8])\s(\d+\s\d+)/;
 
 const hasOneKingPerSide = (position: Fen) => {
@@ -27,10 +27,10 @@ const checkForMaxPiecesPerRow = (position: Fen) =>
       return piecesInRow <= 8;
     }) ?? false;
 
-export const isValidFENSyntax = (position: Fen): boolean =>
-  validFEN.test(position) && checkForMaxPiecesPerRow(position) && hasOneKingPerSide(position);
+export const isValidFenSyntax = (position: Fen): boolean =>
+  validFen.test(position) && checkForMaxPiecesPerRow(position) && hasOneKingPerSide(position);
 
-export const additionalFENTests = (fen: Fen): boolean => {
+export const additionalFenTests = (fen: Fen): boolean => {
   const parts = fen.split(' ');
   if (parts.length !== 6) {
     return false;
@@ -42,9 +42,9 @@ export const additionalFENTests = (fen: Fen): boolean => {
   if (rows?.length !== 8) return false;
   return true;
 };
-export const isValidFEN = (position: Fen): boolean => isValidFENSyntax(position) && additionalFENTests(position);
+export const isValidFen = (position: Fen): boolean => isValidFenSyntax(position) && additionalFenTests(position);
 
-export const extractPiecePlacementFromFEN = (position: Fen) => {
+export const extractPiecePlacementFromFen = (position: Fen) => {
   return position.split(' ').at(0) ?? '';
 };
 
