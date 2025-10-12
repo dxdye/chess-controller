@@ -27,6 +27,8 @@ export type BoardPieceMap = (Piece | null)[][];
 export type CX = number; //Coord X
 export type CY = number; //Coord Y
 
+export type Direction = { row: CX; col: CY };
+
 export type Pgn = string[]; //e4 e5 Nf3 Nc6 Bb5 a6 ...
 export type Fen = string; //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 // should be called Fen
 

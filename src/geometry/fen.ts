@@ -1,9 +1,7 @@
+import { INIT_POSITION } from './constant.ts';
 import { isNil } from './helper.ts';
-import { Fen } from './types.ts';
-import { Board } from './types.ts';
+import { Fen, Board } from './types.ts';
 import { figureToLetter } from './transform.ts';
-
-export const INIT_POSITION: Fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const validFen =
   /\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4}|-)\s(-|[a-h][1-8])\s(\d+\s\d+)/;
@@ -14,6 +12,12 @@ const hasOneKingPerSide = (position: Fen) => {
   const whiteKingCount = (flatPosition.match(/K/g) || []).length;
   const blackKingCount = (flatPosition.match(/k/g) || []).length;
   return whiteKingCount === 1 && blackKingCount === 1;
+};
+
+export const validFenFrom = (fen: Fen) => {
+  if (isValidFen(fen)) {
+    return fen;
+  } else throw new Error('Invalid FEN string');
 };
 
 const checkForMaxPiecesPerRow = (position: Fen) =>

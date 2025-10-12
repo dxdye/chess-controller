@@ -1,6 +1,6 @@
 import { isValidFen } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
-import { Fen, Board, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
+import { Fen, Board, Position, BoardColorMap, Color, Piece, CX, CY, BoardPieceMap } from './types.ts';
 import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure } from './transform.ts';
 
 export const positionToCoordinate = (position: Position): [CY, CX] => [
@@ -48,12 +48,12 @@ export const setBoardMapColor = (color: Color, boardMap: BoardColorMap, position
 };
 
 export const boardToPieceMap = (board: Board): (Piece | null)[][] => {
-  const boardMap: (Piece | null)[][] = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
+  const boardMap: BoardPieceMap = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
 
   board.forEach((square) => {
     const row = rowToIndex(square.row) - 1;
     const col = columnToIndex(square.column) - 1;
-    if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
+    if (boardMap[row] !== undefined && boardMap[row][col] !== undefined) {
       boardMap[row][col] = { figure: square.figure, color: square.color };
     }
   });
