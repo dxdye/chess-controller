@@ -1,12 +1,12 @@
 import { isNil } from './helper.ts';
-import { FEN } from './types.ts';
+import { Fen } from './types.ts';
 
-export const INIT_POSITION: FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+export const INIT_POSITION: Fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const validFEN =
   /\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4}|-)\s(-|[a-h][1-8])\s(\d+\s\d+)/;
 
-const hasOneKingPerSide = (position: FEN) => {
+const hasOneKingPerSide = (position: Fen) => {
   const rows = position.split(' ').at(0)?.split('/') ?? [];
   const flatPosition = rows.join('');
   const whiteKingCount = (flatPosition.match(/K/g) || []).length;
@@ -14,7 +14,7 @@ const hasOneKingPerSide = (position: FEN) => {
   return whiteKingCount === 1 && blackKingCount === 1;
 };
 
-const checkForMaxPiecesPerRow = (position: FEN) =>
+const checkForMaxPiecesPerRow = (position: Fen) =>
   /*should have at max 8 squares (alphabetical letters) per row */
   position
     .split(' ')
@@ -27,10 +27,10 @@ const checkForMaxPiecesPerRow = (position: FEN) =>
       return piecesInRow <= 8;
     }) ?? false;
 
-export const isValidFENSyntax = (position: FEN): boolean =>
+export const isValidFENSyntax = (position: Fen): boolean =>
   validFEN.test(position) && checkForMaxPiecesPerRow(position) && hasOneKingPerSide(position);
 
-export const additionalFENTests = (fen: FEN): boolean => {
+export const additionalFENTests = (fen: Fen): boolean => {
   const parts = fen.split(' ');
   if (parts.length !== 6) {
     return false;
@@ -42,10 +42,10 @@ export const additionalFENTests = (fen: FEN): boolean => {
   if (rows?.length !== 8) return false;
   return true;
 };
-export const isValidFEN = (position: FEN): boolean => isValidFENSyntax(position) && additionalFENTests(position);
+export const isValidFEN = (position: Fen): boolean => isValidFENSyntax(position) && additionalFENTests(position);
 
-export const extractPiecePlacementFromFEN = (position: FEN) => {
+export const extractPiecePlacementFromFEN = (position: Fen) => {
   return position.split(' ').at(0) ?? '';
 };
 
-export const isNewGameFEN = (position: FEN) => position === INIT_POSITION;
+export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;

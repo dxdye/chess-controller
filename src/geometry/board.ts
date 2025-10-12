@@ -1,6 +1,19 @@
 import { isValidFEN } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
-import { FEN, Board, FigureLetter, Row, Column, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
+import {
+  Fen,
+  Board,
+  FigureLetter,
+  Row,
+  Column,
+  Position,
+  BoardColorMap,
+  Color,
+  Piece,
+  CX,
+  CY,
+  Columns,
+} from './types.ts';
 import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure, figureToLetter } from './transform.ts';
 
 export const positionToCoordinate = (position: Position): [CY, CX] => [
@@ -11,20 +24,20 @@ const stringToPosition = (pos: string): Position => {
   if (pos.length !== 2) throw new Error('Invalid position string');
   const col = pos.charAt(0) as Column;
   const row = parseInt(pos.charAt(1), 10) as Row;
-  if (!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(col) || isNaN(row) || row < 1 || row > 8) {
+  if (!Columns.includes(col) || isNaN(row) || row < 1 || row > 8) {
     throw new Error('Invalid position string');
   }
   return { column: col, row: row };
 };
 
-export const createChessBoardFromFEN = (fen: FEN): Board => {
-  if (!isValidFEN(fen)) throw new Error('Invalid FEN string');
+export const createChessBoardFromFEN = (fen: Fen): Board => {
+  if (!isValidFEN(fen)) throw new Error('Invalid Fen string');
 
   const [piecePlacement] = fen.split(' ');
-  if (isNil(piecePlacement)) throw new Error('Invalid FEN string. No piece placement');
+  if (isNil(piecePlacement)) throw new Error('Invalid Fen string. No piece placement');
 
   const rows = piecePlacement?.split('/');
-  if (rows?.length !== 8) throw new Error('Invalid FEN string. Not 8 rows');
+  if (rows?.length !== 8) throw new Error('Invalid Fen string. Not 8 rows');
 
   const board: Board = [];
 
@@ -33,7 +46,7 @@ export const createChessBoardFromFEN = (fen: FEN): Board => {
     for (const char of row) {
       if (/\d/.test(char)) {
         const temp = parseInt(char, 2);
-        if (isNaN(temp) || temp < 1 || temp > 8) throw new Error('Invalid FEN string. Invalid number in row');
+        if (isNaN(temp) || temp < 1 || temp > 8) throw new Error('Invalid Fen string. Invalid number in row');
         colIndex += temp;
       } else {
         const piece = letterToFigure(char as FigureLetter);
@@ -47,7 +60,7 @@ export const createChessBoardFromFEN = (fen: FEN): Board => {
   return board;
 };
 
-export const createFENFromChessBoard = (board: Board): FEN => {
+export const createFENFromChessBoard = (board: Board): Fen => {
   const rows: string[] = Array(8).fill('');
   board.forEach((square) => {
     const rowIndex = 8 - square.row;
@@ -82,7 +95,7 @@ export const createFENFromChessBoard = (board: Board): FEN => {
   });
 
   const piecePlacement = fenRows.join('/');
-  // Default values for other FEN fields
+  // Default values for other Fen fields
   const activeColor = 'w';
   const castlingAvailability = 'KQkq';
   const enPassantTarget = '-';
