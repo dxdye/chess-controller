@@ -1,4 +1,5 @@
-import { isValidFenSyntax, INIT_POSITION } from '../../geometry/fen.ts';
+import { INIT_POSITION } from '../../geometry/constant.ts';
+import { isValidFenSyntax } from '../../geometry/fen.ts';
 import { Fen } from '../../geometry/types.ts';
 
 describe('regex match for Fen module', () => {

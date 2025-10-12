@@ -1,14 +1,15 @@
-import { Figure, Board, Position, Move, BoardColorMap, Color, BoardPieceMap } from './types.ts';
+import { Figure, Board, Position, Move, BoardColorMap, Color, BoardPieceMap, Direction } from './types.ts';
 import { positionToCoordinate, boardToColorMap, getPieceFromPieceMap, boardToPieceMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition } from './transform.ts';
 import { isNotNil } from './helper.ts';
 import { match } from 'ts-pattern';
+import { BLACK_EN_PASSENT_ROW, SECOND_ROW, SEVENTH_ROW, WHITE_EN_PASSENT_ROW } from './constant.ts';
 
 const extractPositionFromMap = (boardColorMap: BoardColorMap, target: Position): Color => {
   const targetCoord = positionToCoordinate(target);
-  const row = boardColorMap[targetCoord[1]] ?? [];
-  return row[targetCoord[0]] ?? 'none';
+  const row = boardColorMap[targetCoord[0] - 1] ?? [];
+  return row[targetCoord[1] - 1] ?? 'none';
 };
 
 const isPieceTaken = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
@@ -20,8 +21,11 @@ const isPieceTaken = (boardColorMap: BoardColorMap, target: Position, ownColor: 
 const isPathBlocked = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
   //a piece gets taken when the target position is occupied by an opponent piece
   const targetColor = extractPositionFromMap(boardColorMap, target);
-
   return targetColor === ownColor;
+};
+const isPawnCaptureBlocked = (boardToColorMap: BoardColorMap, target: Position, ownColor: Color) => {
+  const targetColor = extractPositionFromMap(boardToColorMap, target);
+  return targetColor === 'none' || targetColor === ownColor;
 };
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
@@ -30,7 +34,7 @@ export const calculateMoveListForBishop = (from: Position, board: Board): Move[]
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
-  const directions = [
+  const directions: Direction[] = [
     { row: 1, col: 1 },
     { row: 1, col: -1 },
     { row: -1, col: 1 },
@@ -73,7 +77,7 @@ export const calculateMoveListForKnight = (from: Position, board: Board): Move[]
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
-  const knightMoves = [
+  const knightMoves: Direction[] = [
     { row: 2, col: 1 },
     { row: 2, col: -1 },
     { row: -2, col: 1 },
@@ -114,7 +118,7 @@ export const calculateMoveListForRook = (from: Position, board: Board): Move[] =
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
-  const directions = [
+  const directions: Direction[] = [
     { row: 1, col: 0 },
     { row: -1, col: 0 },
     { row: 0, col: 1 },
@@ -157,7 +161,7 @@ export const calculateMoveListForQueen = (from: Position, board: Board): Move[] 
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
-  const directions = [
+  const directions: Direction[] = [
     { row: 1, col: 0 },
     { row: -1, col: 0 },
     { row: 0, col: 1 },
@@ -255,61 +259,87 @@ export const calculateMoveListForKing = (
 export const calculateMoveListForPawn = (
   from: Position,
   board: Board,
-  isEnPassentPossible: boolean = false, // is true if pawn was moved two squares in the last move
+  hasPreviousTwoStepPawnMove: boolean = false, // allows en passent
 ): Move[] => {
   const color = board.find((square) => square.row === from.row && square.column === from.column)?.color ?? 'none';
   if (color === 'none') {
     throw new Error('No piece found at the given position or invalid color');
   }
-  const whitePawnDirections: {
-    row: number;
-    col: number;
-  }[] = [
+  const whitePawnDirections: Direction[] = [
     { row: 1, col: 0 }, //forward
     { row: 1, col: 1 }, //capture right
     { row: 1, col: -1 }, //capture left
   ];
-  const blackPawnDirections: {
-    row: number;
-    col: number;
-  }[] = [
+
+  const blackPawnDirections: Direction[] = [
     { row: -1, col: 0 }, //forward
     { row: -1, col: 1 }, //capture right
     { row: -1, col: -1 }, //capture left
   ];
-  const directions = color === 'white' ? whitePawnDirections : blackPawnDirections;
   const moves: Move[] = [];
 
-  directions.map((direction) => {
-    const current = positionToCoordinate(from);
+  const current = positionToCoordinate(from);
+  const directions = color === 'white' ? whitePawnDirections : blackPawnDirections;
+  const boardColorMap = boardToColorMap(board);
 
-    const updatedRow = current[0] * direction.row; //y
-    const updatedColumn = current[1] * direction.col; //x
+  directions.map((direction) => {
+    //evaluate all 3 directions
+    let addToMoves: boolean = false;
+    let takesOtherPiece: boolean = false;
+
+    const updatedRow = current[0] + direction.row;
+    const updatedColumn = current[1] + direction.col;
+
+    const inBound = isIndexInBound(updatedRow) && isIndexInBound(updatedColumn);
+
+    if (!inBound)
+      addToMoves = false; //don't add to move if out of bounds
+    else {
+      //if in bounds calculate additional cases
+      const updatedPosition = coordinateToPosition(updatedColumn, updatedRow);
+
+      //forward move, no capture
+      const forwardMoveNotBlocked = direction.col === 0 && isPathEmpty(boardColorMap, updatedPosition);
+
+      //own color isn't other piece color
+      const pawnTakesOtherPiece = direction.col !== 0 && !isPawnCaptureBlocked(boardColorMap, updatedPosition, color);
+
+      //check for en passent move
+      const enpassentCapture =
+        direction.col !== 0 &&
+        isPathEmpty(boardColorMap, updatedPosition) &&
+        hasPreviousTwoStepPawnMove &&
+        ((color === 'white' && from.row === WHITE_EN_PASSENT_ROW) ||
+          (color === 'black' && from.row === BLACK_EN_PASSENT_ROW)); //pawn must be on 5th (white) or 4th (black) row
+
+      addToMoves = pawnTakesOtherPiece || forwardMoveNotBlocked || enpassentCapture;
+      takesOtherPiece = pawnTakesOtherPiece || enpassentCapture;
+    }
+    if (addToMoves) {
+      moves.push({ ...coordinateToPosition(updatedColumn, updatedRow), isTaken: takesOtherPiece });
+    }
+  });
+
+  //2 steps forward
+  if ((color === 'white' && from.row === SECOND_ROW) || (color === 'black' && from.row === SEVENTH_ROW)) {
+    const current = positionToCoordinate(from);
+    const updatedRow = current[0] + (color === 'white' ? 2 : -2);
+    const updatedColumn = current[1];
     if (
-      (isIndexInBound(updatedRow) &&
-        isIndexInBound(updatedColumn) &&
-        color !== undefined &&
-        ((!isPathBlocked(
-          //own color isn't other piece color
-          boardToColorMap(board),
-          coordinateToPosition(updatedColumn, updatedRow),
-          color,
-        ) &&
-          direction.col !== 0) ||
-          (direction.col === 0 &&
-            isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow))))) || //forward move, no capture
-      (direction.col !== 0 &&
-        isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow)) &&
-        isEnPassentPossible) //check for en passent move
+      isIndexInBound(updatedRow) &&
+      isIndexInBound(updatedColumn) &&
+      isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow)) &&
+      isPathEmpty(
+        boardToColorMap(board),
+        coordinateToPosition(updatedColumn, current[0] + (color === 'white' ? 1 : -1)),
+      )
     ) {
       moves.push({
         ...coordinateToPosition(updatedColumn, updatedRow),
-        isTaken: isPieceTaken(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow), color ?? 'none'),
+        isTaken: false,
       });
     }
-  });
-  //2 steps forward
-  if ((color === 'white' && from.row === 2) || (color === 'black' && from.row === 7)) return moves;
+  }
 
   return moves;
 };
@@ -317,7 +347,7 @@ export const calculateMoveListForPawn = (
 export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
-  isEnPassentPossible: boolean = false, // is true if pawn was moved two squares in the last move
+  hasPreviousTwoStepPawnMove: boolean = false, // is true if pawn was moved two squares in the last move
 ): Move[] => {
   const piece = board.find((square) => square.row === from.row && square.column === from.column);
   if (isNil(piece)) {
@@ -330,7 +360,7 @@ export const calculateMoveListForPiece = (
     .with('ROOK', () => calculateMoveListForRook(from, board))
     .with('QUEEN', () => calculateMoveListForQueen(from, board))
     .with('KING', () => calculateMoveListForKing(from, board))
-    .with('PAWN', () => calculateMoveListForPawn(from, board, isEnPassentPossible))
+    .with('PAWN', () => calculateMoveListForPawn(from, board, hasPreviousTwoStepPawnMove))
     .otherwise(() => {
       throw new Error('Invalid piece type');
     });
@@ -341,7 +371,7 @@ const findKingPosition = (board: Board, color: Color): Position | undefined => {
   return kingSquare ? { row: kingSquare.row, column: kingSquare.column } : undefined;
 };
 
-const isPawnDirectionCorrect = (direction: { row: number; col: number }, color: Color) =>
+const isPawnDirectionCorrect = (direction: Direction, color: Color) =>
   (color === 'white' && direction.row === 1) || (color === 'black' && direction.row === -1);
 
 const checkDirectionForCheck = (
@@ -403,6 +433,7 @@ export const isKingChecked = (board: Board, color: Color): boolean => {
       { row: 0, col: 1 },
       { row: 0, col: -1 },
     ] as const;
+
     //check by knight
     const knightMoves = [
       { row: 2, col: 1 },

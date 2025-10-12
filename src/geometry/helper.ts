@@ -6,5 +6,5 @@ export function isNotNil<T>(value?: T): value is NonNullable<T> {
   return !isNil(value);
 }
 
-export const isIndexInBound = (index: number): boolean => index >= 0 && index < 8;
+export const isIndexInBound = (index: number): boolean => index > 0 && index <= 8; //index from 1..8
 

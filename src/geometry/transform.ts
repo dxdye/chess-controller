@@ -52,7 +52,7 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
     .with(7, () => 'g')
     .with(8, () => 'h')
     .otherwise(() => {
-      throw new Error('Invalid row number');
+      throw new Error(`Invalid column number ${col_x}`);
     }),
   row: match<number, Row>(row_y)
     .with(1, () => 1)
@@ -64,7 +64,7 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
     .with(7, () => 7)
     .with(8, () => 8)
     .otherwise(() => {
-      throw new Error(`Invalid column number ${col_x}`);
+      throw new Error(`Invalid row number ${row_y}`);
     }),
 });
 export const columnToIndex = (col: Column): CX =>
