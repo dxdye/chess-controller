@@ -1,4 +1,4 @@
-import { isValidFEN } from './fen.ts';
+import { isValidFen } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
 import {
   Fen,
@@ -30,8 +30,8 @@ const stringToPosition = (pos: string): Position => {
   return { column: col, row: row };
 };
 
-export const createChessBoardFromFEN = (fen: Fen): Board => {
-  if (!isValidFEN(fen)) throw new Error('Invalid Fen string');
+export const createChessBoardFromFen = (fen: Fen): Board => {
+  if (!isValidFen(fen)) throw new Error('Invalid Fen string');
 
   const [piecePlacement] = fen.split(' ');
   if (isNil(piecePlacement)) throw new Error('Invalid Fen string. No piece placement');
@@ -43,13 +43,13 @@ export const createChessBoardFromFEN = (fen: Fen): Board => {
 
   rows?.forEach((row, rowIndex) => {
     let colIndex = 0;
-    for (const char of row) {
-      if (/\d/.test(char)) {
-        const temp = parseInt(char, 2);
+    for (const figureLetter of row) {
+      if (/\d/.test(figureLetter)) {
+        const temp = parseInt(figureLetter, 10);
         if (isNaN(temp) || temp < 1 || temp > 8) throw new Error('Invalid Fen string. Invalid number in row');
         colIndex += temp;
       } else {
-        const piece = letterToFigure(char as FigureLetter);
+        const piece: Piece = letterToFigure(figureLetter);
         const position = coordinateToPosition(colIndex + 1, 8 - rowIndex);
         board.push({ ...position, ...piece });
         colIndex++;
@@ -60,7 +60,7 @@ export const createChessBoardFromFEN = (fen: Fen): Board => {
   return board;
 };
 
-export const createFENFromChessBoard = (board: Board): Fen => {
+export const createFenFromChessBoard = (board: Board): Fen => {
   const rows: string[] = Array(8).fill('');
   board.forEach((square) => {
     const rowIndex = 8 - square.row;
