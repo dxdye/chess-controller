@@ -1,5 +1,7 @@
 import { isNil } from './helper.ts';
 import { Fen } from './types.ts';
+import { Board } from './types.ts';
+import { figureToLetter } from './transform.ts';
 
 export const INIT_POSITION: Fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -49,3 +51,60 @@ export const extractPiecePlacementFromFen = (position: Fen) => {
 };
 
 export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;
+
+// export const extractCastlingRightsFromFen = (fen: Fen) => {
+//   const parts = fen.split(' ');
+//   if (parts.length < 3) throw new Error('Invalid Fen string');
+//   const castlingPart = parts[2];
+//   return {
+//     whiteKingSideCastle: castlingPart.includes('K'),
+//     whiteQueenSideCastle: castlingPart.includes('Q'),
+//     blackKingSideCastle: castlingPart.includes('k'),
+//     blackQueenSideCastle: castlingPart.includes('q'),
+//   };
+// };
+
+export const createFenFromChessBoard = (board: Board): Fen => {
+  const rows: string[] = Array(8).fill('');
+  board.forEach((square) => {
+    const rowIndex = 8 - square.row;
+    const colIndex = square.column.charCodeAt(0) - 'a'.charCodeAt(0);
+    rows[rowIndex] += figureToLetter({
+      figure: square.figure,
+      color: square.color,
+    });
+  });
+
+  const fenRows = rows.map((row) => {
+    let fenRow = '';
+    let emptyCount = 0;
+
+    for (const char of row) {
+      if (/[rnbqkpRNBQKP]/.test(char)) {
+        if (emptyCount > 0) {
+          fenRow += emptyCount.toString();
+          emptyCount = 0;
+        }
+        fenRow += char;
+      } else {
+        emptyCount++;
+      }
+    }
+
+    if (emptyCount > 0) {
+      fenRow += emptyCount.toString();
+    }
+
+    return fenRow;
+  });
+
+  const piecePlacement = fenRows.join('/');
+  // Default values for other Fen fields
+  const activeColor = 'w';
+  const castlingAvailability = 'KQkq';
+  const enPassantTarget = '-';
+  const halfmoveClock = '0';
+  const fullmoveNumber = '1';
+
+  return `${piecePlacement} ${activeColor} ${castlingAvailability} ${enPassantTarget} ${halfmoveClock} ${fullmoveNumber}`;
+};

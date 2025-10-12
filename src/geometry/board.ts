@@ -1,34 +1,12 @@
 import { isValidFen } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
-import {
-  Fen,
-  Board,
-  FigureLetter,
-  Row,
-  Column,
-  Position,
-  BoardColorMap,
-  Color,
-  Piece,
-  CX,
-  CY,
-  Columns,
-} from './types.ts';
-import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure, figureToLetter } from './transform.ts';
+import { Fen, Board, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
+import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure } from './transform.ts';
 
 export const positionToCoordinate = (position: Position): [CY, CX] => [
   rowToIndex(position.row),
   columnToIndex(position.column),
 ];
-const stringToPosition = (pos: string): Position => {
-  if (pos.length !== 2) throw new Error('Invalid position string');
-  const col = pos.charAt(0) as Column;
-  const row = parseInt(pos.charAt(1), 10) as Row;
-  if (!Columns.includes(col) || isNaN(row) || row < 1 || row > 8) {
-    throw new Error('Invalid position string');
-  }
-  return { column: col, row: row };
-};
 
 export const createChessBoardFromFen = (fen: Fen): Board => {
   if (!isValidFen(fen)) throw new Error('Invalid Fen string');
@@ -59,55 +37,6 @@ export const createChessBoardFromFen = (fen: Fen): Board => {
 
   return board;
 };
-
-export const createFenFromChessBoard = (board: Board): Fen => {
-  const rows: string[] = Array(8).fill('');
-  board.forEach((square) => {
-    const rowIndex = 8 - square.row;
-    const colIndex = square.column.charCodeAt(0) - 'a'.charCodeAt(0);
-    rows[rowIndex] += figureToLetter({
-      figure: square.figure,
-      color: square.color,
-    });
-  });
-
-  const fenRows = rows.map((row) => {
-    let fenRow = '';
-    let emptyCount = 0;
-
-    for (const char of row) {
-      if (/[rnbqkpRNBQKP]/.test(char)) {
-        if (emptyCount > 0) {
-          fenRow += emptyCount.toString();
-          emptyCount = 0;
-        }
-        fenRow += char;
-      } else {
-        emptyCount++;
-      }
-    }
-
-    if (emptyCount > 0) {
-      fenRow += emptyCount.toString();
-    }
-
-    return fenRow;
-  });
-
-  const piecePlacement = fenRows.join('/');
-  // Default values for other Fen fields
-  const activeColor = 'w';
-  const castlingAvailability = 'KQkq';
-  const enPassantTarget = '-';
-  const halfmoveClock = '0';
-  const fullmoveNumber = '1';
-
-  return `${piecePlacement} ${activeColor} ${castlingAvailability} ${enPassantTarget} ${halfmoveClock} ${fullmoveNumber}`;
-};
-
-export const isPositionOccupied = (board: Board, position: Position): boolean =>
-  board.some((square) => square.row === position.row && square.column === position.column);
-// const getValidMoves = (from: Piece): Piece[] => [];
 
 export const setBoardMapColor = (color: Color, boardMap: BoardColorMap, position: Position): BoardColorMap => {
   const row = rowToIndex(position.row) - 1;
@@ -142,3 +71,5 @@ export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Pos
   }
   return null;
 };
+
+
