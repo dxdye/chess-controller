@@ -34,10 +34,7 @@ export const figureToLetter = (piece: Piece): FigureLetter =>
       throw new Error('Invalid piece');
     });
 
-export const coordinateToPosition = (
-  col_x: number,
-  row_y: number,
-): Position => ({
+export const coordinateToPosition = (col_x: number, row_y: number): Position => ({
   row: match<number, Row>(row_y)
     .with(1, () => 'a')
     .with(2, () => 'b')

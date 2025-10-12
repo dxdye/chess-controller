@@ -1,24 +1,7 @@
 import { FEN, isValidFEN } from './fen.ts';
 import { isNil, isNotNil } from './helper.ts';
-import {
-  Board,
-  FigureLetter,
-  Row,
-  Column,
-  Position,
-  BoardColorMap,
-  Color,
-  Piece,
-  CX,
-  CY,
-} from './types.ts';
-import {
-  rowToIndex,
-  columnToIndex,
-  coordinateToPosition,
-  letterToFigure,
-  figureToLetter,
-} from './transform.ts';
+import { Board, FigureLetter, Row, Column, Position, BoardColorMap, Color, Piece, CX, CY } from './types.ts';
+import { rowToIndex, columnToIndex, coordinateToPosition, letterToFigure, figureToLetter } from './transform.ts';
 
 export const positionToCoordinate = (position: Position): [CY, CX] => [
   rowToIndex(position.row),
@@ -28,12 +11,7 @@ const stringToPosition = (pos: string): Position => {
   if (pos.length !== 2) throw new Error('Invalid position string');
   const row = pos.charAt(0) as Row;
   const column = parseInt(pos.charAt(1), 10) as Column;
-  if (
-    !['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(row) ||
-    isNaN(column) ||
-    column < 1 ||
-    column > 8
-  ) {
+  if (!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(row) || isNaN(column) || column < 1 || column > 8) {
     throw new Error('Invalid position string');
   }
   return { row, column };
@@ -43,8 +21,7 @@ export const createChessBoardFromFEN = (fen: FEN): Board => {
   if (!isValidFEN(fen)) throw new Error('Invalid FEN string');
 
   const [piecePlacement] = fen.split(' ');
-  if (isNil(piecePlacement))
-    throw new Error('Invalid FEN string. No piece placement');
+  if (isNil(piecePlacement)) throw new Error('Invalid FEN string. No piece placement');
 
   const rows = piecePlacement?.split('/');
   if (rows?.length !== 8) throw new Error('Invalid FEN string. Not 8 rows');
@@ -56,8 +33,7 @@ export const createChessBoardFromFEN = (fen: FEN): Board => {
     for (const char of row) {
       if (/\d/.test(char)) {
         const temp = parseInt(char, 2);
-        if (isNaN(temp) || temp < 1 || temp > 8)
-          throw new Error('Invalid FEN string. Invalid number in row');
+        if (isNaN(temp) || temp < 1 || temp > 8) throw new Error('Invalid FEN string. Invalid number in row');
         colIndex += temp;
       } else {
         const piece = letterToFigure(char as FigureLetter);
@@ -117,17 +93,10 @@ export const createFENFromChessBoard = (board: Board): FEN => {
 };
 
 export const isPositionOccupied = (board: Board, position: Position): boolean =>
-  board.some(
-    (square) =>
-      square.row === position.row && square.column === position.column,
-  );
+  board.some((square) => square.row === position.row && square.column === position.column);
 // const getValidMoves = (from: Piece): Piece[] => [];
 
-export const setBoardMapColor = (
-  color: Color,
-  boardMap: BoardColorMap,
-  position: Position,
-): BoardColorMap => {
+export const setBoardMapColor = (color: Color, boardMap: BoardColorMap, position: Position): BoardColorMap => {
   const row = rowToIndex(position.row) - 1;
   const col = position.column - 1;
   if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
@@ -137,9 +106,7 @@ export const setBoardMapColor = (
 };
 
 export const boardToPieceMap = (board: Board): (Piece | null)[][] => {
-  const boardMap: (Piece | null)[][] = Array.from({ length: 8 }, () =>
-    Array.from({ length: 8 }, () => null),
-  );
+  const boardMap: (Piece | null)[][] = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
 
   board.forEach((square) => {
     const row = rowToIndex(square.row) - 1;
@@ -152,14 +119,9 @@ export const boardToPieceMap = (board: Board): (Piece | null)[][] => {
 };
 
 export const boardToColorMap = (board: Board): BoardColorMap =>
-  boardToPieceMap(board).map((row) =>
-    row.map((piece) => (isNil(piece) ? 'none' : piece.color)),
-  );
+  boardToPieceMap(board).map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
 
-export const getPieceFromPieceMap = (
-  boardMap: (Piece | null)[][],
-  position: Position,
-): Piece | null => {
+export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Position): Piece | null => {
   const row = rowToIndex(position.row) - 1;
   const col = position.column - 1;
   if (isNotNil(boardMap[row]) && isNotNil(boardMap[row][col])) {
