@@ -1,4 +1,4 @@
-import { FigureLetter, Piece, Row, Column, Position } from './types.ts';
+import { FigureLetter, Piece, Row, Column, Position, CY, CX } from './types.ts';
 import { match } from 'ts-pattern';
 export const letterToFigure = (letter: FigureLetter): Piece =>
   match<FigureLetter, Piece>(letter)
@@ -35,7 +35,7 @@ export const figureToLetter = (piece: Piece): FigureLetter =>
     });
 
 export const coordinateToPosition = (col_x: number, row_y: number): Position => ({
-  row: match<number, Row>(row_y)
+  column: match<number, Column>(row_y)
     .with(1, () => 'a')
     .with(2, () => 'b')
     .with(3, () => 'c')
@@ -47,7 +47,7 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
     .otherwise(() => {
       throw new Error('Invalid row number');
     }),
-  column: match<number, Column>(col_x)
+  row: match<number, Row>(col_x)
     .with(1, () => 1)
     .with(2, () => 2)
     .with(3, () => 3)
@@ -60,8 +60,8 @@ export const coordinateToPosition = (col_x: number, row_y: number): Position => 
       throw new Error('Invalid column number');
     }),
 });
-export const rowToIndex = (row: Row): number =>
-  match<Row, number>(row)
+export const columnToIndex = (col: Column): CX =>
+  match<Column, number>(col)
     .with('a', () => 1)
     .with('b', () => 2)
     .with('c', () => 3)
@@ -71,4 +71,4 @@ export const rowToIndex = (row: Row): number =>
     .with('g', () => 7)
     .with('h', () => 8)
     .exhaustive();
-export const columnToIndex = (column: Column): number => column;
+export const rowToIndex = (row: Row): CY => row;
