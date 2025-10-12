@@ -28,11 +28,11 @@ export type CX = number; //Coord X
 export type CY = number; //Coord Y
 
 export type Pgn = string[]; //e4 e5 Nf3 Nc6 Bb5 a6 ...
-export type FEN = string; //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 // should be called Fen
+export type Fen = string; //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 // should be called Fen
 
 export type Game = {
   id: string;
-  history: FEN[];
+  history: Fen[];
   turn: Color;
 
   lastMoveTwoPawnStep: boolean; //will be used for en passant at pawn move
