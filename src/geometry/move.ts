@@ -301,14 +301,8 @@ export const calculateMoveListForKing = (
 //   }
 // };
 
-export const calculateMoveListForPawn = (
-  from: Position,
-  board: Board,
-  enPassentPossible: boolean = false,
-): Move[] => {
-  const color = board.find(
-    (square) => square.row === from.row && square.column === from.column,
-  )?.color;
+export const calculateMoveListForPawn = (from: Position, board: Board, isEnPassentPossible: boolean = false): Move[] => {
+  const color = board.find((square) => square.row === from.row && square.column === from.column)?.color;
   if (isNil(color) || color === 'none') {
     throw new Error('No piece found at the given position or invalid color');
   }
@@ -328,8 +322,7 @@ export const calculateMoveListForPawn = (
     { row: -1, col: 1 }, //capture right
     { row: -1, col: -1 }, //capture left
   ];
-  const directions =
-    color === 'white' ? whitePawnDirections : blackPawnDirections;
+  const directions = color === 'white' ? whitePawnDirections : blackPawnDirections;
   const moves: Move[] = [];
 
   directions.map((direction) => {
@@ -338,24 +331,25 @@ export const calculateMoveListForPawn = (
     const updatedRow = current[0] * direction.row; //y
     const updatedColumn = current[1] * direction.col; //x
     if (
-      isIndexInBound(updatedRow) &&
-      isIndexInBound(updatedColumn) &&
-      color !== undefined &&
-      !isPathBlocked(
-        //own color isn't other piece color
-        boardToColorMap(board),
-        coordinateToPosition(updatedColumn, updatedRow),
-        color,
-      ) &&
-      direction.col === 0 //forward move, no capture
-    ) {
-      moves.push({
-        ...coordinateToPosition(updatedColumn, updatedRow),
-        isTaken: isPieceTaken(
+      (isIndexInBound(updatedRow) &&
+        isIndexInBound(updatedColumn) &&
+        color !== undefined &&
+        ((!isPathBlocked(
+          //own color isn't other piece color
           boardToColorMap(board),
           coordinateToPosition(updatedColumn, updatedRow),
           color,
-        ),
+        ) &&
+          direction.col !== 0) ||
+          (direction.col === 0 &&
+            isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow))))) || //forward move, no capture
+      (direction.col !== 0 &&
+        isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow)) &&
+        isEnPassentPossible) //en passent move)
+    ) {
+      moves.push({
+        ...coordinateToPosition(updatedColumn, updatedRow),
+        isTaken: isPieceTaken(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow), color ?? 'none'),
       });
     }
   });
