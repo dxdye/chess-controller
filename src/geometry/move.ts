@@ -1,47 +1,23 @@
-import {
-  Figure,
-  Board,
-  Position,
-  Move,
-  BoardColorMap,
-  Color,
-  BoardPieceMap,
-} from './types.ts';
-import {
-  positionToCoordinate,
-  boardToColorMap,
-  getPieceFromPieceMap,
-  boardToPieceMap,
-} from './board.ts';
+import { Figure, Board, Position, Move, BoardColorMap, Color, BoardPieceMap } from './types.ts';
+import { positionToCoordinate, boardToColorMap, getPieceFromPieceMap, boardToPieceMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition } from './transform.ts';
 import { isNotNil } from './helper.ts';
 import { match } from 'ts-pattern';
 
-const extractPositionFromMap = (
-  boardColorMap: BoardColorMap,
-  target: Position,
-): Color => {
+const extractPositionFromMap = (boardColorMap: BoardColorMap, target: Position): Color => {
   const targetCoord = positionToCoordinate(target);
   const row = boardColorMap[targetCoord[1]] ?? [];
   return row[targetCoord[0]] ?? 'none';
 };
 
-const isPieceTaken = (
-  boardColorMap: BoardColorMap,
-  target: Position,
-  ownColor: Color,
-): boolean => {
+const isPieceTaken = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
   //a piece gets taken when the target position is occupied by an opponent piece
   const targetColor = extractPositionFromMap(boardColorMap, target);
 
   return targetColor !== 'none' && targetColor !== ownColor;
 };
-const isPathBlocked = (
-  boardColorMap: BoardColorMap,
-  target: Position,
-  ownColor: Color,
-): boolean => {
+const isPathBlocked = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
   //a piece gets taken when the target position is occupied by an opponent piece
   const targetColor = extractPositionFromMap(boardColorMap, target);
 
@@ -50,10 +26,7 @@ const isPathBlocked = (
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
 
-export const calculateMoveListForBishop = (
-  from: Position,
-  board: Board,
-): Move[] => {
+export const calculateMoveListForBishop = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
@@ -74,11 +47,7 @@ export const calculateMoveListForBishop = (
         coordinateToPosition(updatedCol, updatedRow),
         extractPositionFromMap(boardColorMap, from),
       );
-      if (
-        isIndexInBound(updatedRow) &&
-        isIndexInBound(updatedCol) &&
-        !pathBlocked
-      ) {
+      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
         moves.push({
           ...coordinateToPosition(updatedCol, updatedRow),
           isTaken: isPieceTaken(
@@ -100,10 +69,7 @@ export const calculateMoveListForBishop = (
   return moves;
 };
 
-export const calculateMoveListForKnight = (
-  from: Position,
-  board: Board,
-): Move[] => {
+export const calculateMoveListForKnight = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
@@ -144,10 +110,7 @@ export const calculateMoveListForKnight = (
   return moves;
 };
 
-export const calculateMoveListForRook = (
-  from: Position,
-  board: Board,
-): Move[] => {
+export const calculateMoveListForRook = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
@@ -168,11 +131,7 @@ export const calculateMoveListForRook = (
         coordinateToPosition(updatedCol, updatedRow),
         extractPositionFromMap(boardColorMap, from),
       );
-      if (
-        isIndexInBound(updatedRow) &&
-        isIndexInBound(updatedCol) &&
-        !pathBlocked
-      ) {
+      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
         moves.push({
           ...coordinateToPosition(updatedCol, updatedRow),
           isTaken: isPieceTaken(
@@ -194,10 +153,7 @@ export const calculateMoveListForRook = (
   return moves;
 };
 
-export const calculateMoveListForQueen = (
-  from: Position,
-  board: Board,
-): Move[] => {
+export const calculateMoveListForQueen = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
@@ -224,11 +180,7 @@ export const calculateMoveListForQueen = (
         coordinateToPosition(updatedCol, updatedRow),
         extractPositionFromMap(boardColorMap, from),
       );
-      if (
-        isIndexInBound(updatedRow) &&
-        isIndexInBound(updatedCol) &&
-        !pathBlocked
-      ) {
+      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
         moves.push({
           ...coordinateToPosition(updatedCol, updatedRow),
           isTaken: isPieceTaken(
@@ -250,10 +202,7 @@ export const calculateMoveListForQueen = (
   return moves;
 };
 
-export const calculateMoveListForKing = (
-  from: Position,
-  board: Board,
-): Move[] => {
+export const calculateMoveListForKing = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
@@ -294,14 +243,11 @@ export const calculateMoveListForKing = (
   return moves;
 };
 
-// const checkForEnpassent = (from: Position, color: Color): Position | null => {
-//   if (color === 'white' && from.row === 'e') {
-//     //check whether pawn is to the left or right
-//     return { row: 6, column: from.column };
-//   }
-// };
-
-export const calculateMoveListForPawn = (from: Position, board: Board, isEnPassentPossible: boolean = false): Move[] => {
+export const calculateMoveListForPawn = (
+  from: Position,
+  board: Board,
+  isEnPassentPossible: boolean = false, // is true if pawn was moved two squares in the last move
+): Move[] => {
   const color = board.find((square) => square.row === from.row && square.column === from.column)?.color;
   if (isNil(color) || color === 'none') {
     throw new Error('No piece found at the given position or invalid color');
@@ -345,7 +291,7 @@ export const calculateMoveListForPawn = (from: Position, board: Board, isEnPasse
             isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow))))) || //forward move, no capture
       (direction.col !== 0 &&
         isPathEmpty(boardToColorMap(board), coordinateToPosition(updatedColumn, updatedRow)) &&
-        isEnPassentPossible) //en passent move)
+        isEnPassentPossible) //check for en passent move
     ) {
       moves.push({
         ...coordinateToPosition(updatedColumn, updatedRow),
@@ -359,10 +305,9 @@ export const calculateMoveListForPawn = (from: Position, board: Board, isEnPasse
 export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
+  isEnPassentPossible: boolean = false, // is true if pawn was moved two squares in the last move
 ): Move[] => {
-  const piece = board.find(
-    (square) => square.row === from.row && square.column === from.column,
-  );
+  const piece = board.find((square) => square.row === from.row && square.column === from.column);
   if (isNil(piece)) {
     throw new Error('No piece found at the given position');
   }
@@ -373,29 +318,19 @@ export const calculateMoveListForPiece = (
     .with('ROOK', () => calculateMoveListForRook(from, board))
     .with('QUEEN', () => calculateMoveListForQueen(from, board))
     .with('KING', () => calculateMoveListForKing(from, board))
-    .with('PAWN', () => {
-      throw new Error('Pawn move calculation not implemented yet');
-    })
+    .with('PAWN', () => calculateMoveListForPawn(from, board, isEnPassentPossible))
     .otherwise(() => {
       throw new Error('Invalid piece type');
     });
 };
 
 const findKingPosition = (board: Board, color: Color): Position | undefined => {
-  const kingSquare = board.find(
-    (square) => square.figure === 'KING' && square.color === color,
-  );
-  return kingSquare
-    ? { row: kingSquare.row, column: kingSquare.column }
-    : undefined;
+  const kingSquare = board.find((square) => square.figure === 'KING' && square.color === color);
+  return kingSquare ? { row: kingSquare.row, column: kingSquare.column } : undefined;
 };
 
-const isPawnDirectionCorrect = (
-  direction: { row: number; col: number },
-  color: Color,
-) =>
-  (color === 'white' && direction.row === 1) ||
-  (color === 'black' && direction.row === -1);
+const isPawnDirectionCorrect = (direction: { row: number; col: number }, color: Color) =>
+  (color === 'white' && direction.row === 1) || (color === 'black' && direction.row === -1);
 
 const checkDirectionForCheck = (
   pieceMap: BoardPieceMap,
@@ -411,14 +346,9 @@ const checkDirectionForCheck = (
       //maybe a better way instead of using typeguard
       const stepTemp = siftBoard ? step : 1;
 
-      const updatedRow =
-        positionToCoordinate(kingPosition)[0] + direction.row * stepTemp;
-      const updatedCol =
-        positionToCoordinate(kingPosition)[1] + direction.col * stepTemp;
-      const piece = getPieceFromPieceMap(
-        pieceMap,
-        coordinateToPosition(updatedCol, updatedRow),
-      );
+      const updatedRow = positionToCoordinate(kingPosition)[0] + direction.row * stepTemp;
+      const updatedCol = positionToCoordinate(kingPosition)[1] + direction.col * stepTemp;
+      const piece = getPieceFromPieceMap(pieceMap, coordinateToPosition(updatedCol, updatedRow));
       if (piece !== null) {
         if (
           //check for pawn attack
@@ -473,33 +403,11 @@ const isKingChecked = (board: Board, color: Color): boolean => {
       { row: -1, col: -2 },
     ] as const;
 
-    if (
-      checkDirectionForCheck(pieceMap, kingPosition, bishopDirection, color, [
-        'BISHOP',
-        'QUEEN',
-      ])
-    )
-      return true;
+    if (checkDirectionForCheck(pieceMap, kingPosition, bishopDirection, color, ['BISHOP', 'QUEEN'])) return true;
     //check by bishop or queen
     //check by rook or queen
-    if (
-      checkDirectionForCheck(pieceMap, kingPosition, rookDirection, color, [
-        'ROOK',
-        'QUEEN',
-      ])
-    )
-      return true;
-    if (
-      checkDirectionForCheck(
-        pieceMap,
-        kingPosition,
-        knightMoves,
-        color,
-        ['KNIGHT'],
-        false,
-      )
-    )
-      return true;
+    if (checkDirectionForCheck(pieceMap, kingPosition, rookDirection, color, ['ROOK', 'QUEEN'])) return true;
+    if (checkDirectionForCheck(pieceMap, kingPosition, knightMoves, color, ['KNIGHT'], false)) return true;
     return false;
   }
 };
@@ -508,5 +416,4 @@ export const isCheckMate = (
   board: Board,
   color: Color,
 ): boolean => //king has no moves.. and is checked
-  calculateMoveListForKing(findKingPosition(board, color)!, board).length ===
-    0 && isKingChecked(board, color);
+  calculateMoveListForKing(findKingPosition(board, color)!, board).length === 0 && isKingChecked(board, color);

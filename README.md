@@ -50,9 +50,9 @@ It should:
 
 ## Testing
 
-Since `jest` runs on `Node.js` and `Node.js` doesn't support ECMAScript Modules natively, `babel.js` (babel-jest) is used as plugin to transform the code, allowing imports from other files. To test you need to:
+Since `jest` runs on `Node.js` and `Node.js` doesn't support ECMAScript Modules natively, `babel.js` (babel-jest) is
+used as plugin to transform the code, allowing imports from other files. To test you need to:
 
 `npm run test`
 
-For some reason an approach without babel failed - `ts-jest` should be an
-alternative.
+For some reason an approach without babel failed - `ts-jest` should be an alternative.
