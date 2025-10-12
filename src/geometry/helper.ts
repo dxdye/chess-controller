@@ -8,4 +8,3 @@ export function isNotNil<T>(value?: T): value is NonNullable<T> {
 
 export const isIndexInBound = (index: number): boolean => index >= 0 && index < 8;
 
-//how to avoid infinite loop here?
