@@ -38,10 +38,17 @@ describe('Move generation for pawn', () => {
     expect(movesE4).toEqual([]);
     expect(movesH4).toEqual([]);
   });
-  it('generates an empty list for a blocked black pawn on f7', () => {
+  it('generates an empty list for a blocked black pawn on f7 and b4', () => {
     const initPosL: Fen = validFenFrom('rnbqkb1r/1p1p1ppp/p1p2P2/8/3P4/8/PP3PPP/RNBQKBNR b KQkq - 0 6');
+    const initPosB4: Fen = validFenFrom('rnbqkbnr/p1p2pp1/8/3pp2p/1p1P1B1P/1P2P3/P1P2PP1/RN1QKBNR w KQkq - 0 6');
+
     const boardL = createChessBoardFromFen(initPosL);
+    const boardB4 = createChessBoardFromFen(initPosB4);
+
     const movesL = calculateMoveListForPawn({ column: 'f', row: 7 }, boardL);
+    const movesB4 = calculateMoveListForPawn({ column: 'b', row: 4 }, boardB4);
+
     expect(movesL).toEqual([]);
+    expect(movesB4).toEqual([]);
   });
 });
