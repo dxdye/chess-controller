@@ -1,7 +1,17 @@
-import { Figure, Board, Position, Move, BoardColorMap, Color, BoardPieceMap, Direction } from './types.ts';
+import {
+  Figure,
+  Board,
+  Position,
+  Move,
+  BoardColorMap,
+  Color,
+  BoardPieceMap,
+  Direction,
+  EnPassentColumn,
+} from './types.ts';
 import { positionToCoordinate, boardToColorMap, getPieceFromPieceMap, boardToPieceMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
-import { coordinateToPosition } from './transform.ts';
+import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';
 import { isNotNil } from './helper.ts';
 import { match } from 'ts-pattern';
 import { BLACK_EN_PASSENT_ROW, SECOND_ROW, SEVENTH_ROW, WHITE_EN_PASSENT_ROW } from './constant.ts';
@@ -27,6 +37,7 @@ const isPawnCaptureBlocked = (boardToColorMap: BoardColorMap, target: Position, 
   const targetColor = extractPositionFromMap(boardToColorMap, target);
   return targetColor === 'none' || targetColor === ownColor;
 };
+
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
 
@@ -259,7 +270,7 @@ export const calculateMoveListForKing = (
 export const calculateMoveListForPawn = (
   from: Position,
   board: Board,
-  hasPreviousTwoStepPawnMove: boolean = false, // allows en passent
+  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // allows en passent
 ): Move[] => {
   const color = board.find((square) => square.row === from.row && square.column === from.column)?.color ?? 'none';
   if (color === 'none') {
@@ -308,6 +319,7 @@ export const calculateMoveListForPawn = (
       const enpassentCapture =
         direction.col !== 0 &&
         isPathEmpty(boardColorMap, updatedPosition) &&
+        updatedColumn === enPassentColumnToIndex(hasPreviousTwoStepPawnMove) && //must be on the correct column
         hasPreviousTwoStepPawnMove &&
         ((color === 'white' && from.row === WHITE_EN_PASSENT_ROW) ||
           (color === 'black' && from.row === BLACK_EN_PASSENT_ROW)); //pawn must be on 5th (white) or 4th (black) row
@@ -347,7 +359,7 @@ export const calculateMoveListForPawn = (
 export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
-  hasPreviousTwoStepPawnMove: boolean = false, // is true if pawn was moved two squares in the last move
+  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // is true if pawn was moved two squares in the last move
 ): Move[] => {
   const piece = board.find((square) => square.row === from.row && square.column === from.column);
   if (isNil(piece)) {

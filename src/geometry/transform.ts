@@ -1,8 +1,6 @@
 import { FigureLetter, Piece, Row, Column, Position, CY, CX } from './types.ts';
 import { match } from 'ts-pattern';
 
-
-
 export const letterToFigure = (letter: string): Piece =>
   match<string, Piece>(letter)
     .with('P', () => ({ figure: 'PAWN', color: 'white' }))
@@ -79,3 +77,8 @@ export const columnToIndex = (col: Column): CX =>
     .with('h', () => 8)
     .exhaustive();
 export const rowToIndex = (row: Row): CY => row;
+
+export const enPassentColumnToIndex = (col: Column | '-'): CX =>
+  match<Column | '-', CX>(col)
+    .with('-', () => -Infinity)
+    .otherwise(() => columnToIndex(col as Column));
