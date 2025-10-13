@@ -61,8 +61,7 @@ export const boardToPieceMap = (board: Board): (Piece | null)[][] => {
   return boardMap;
 };
 
-export const boardToColorMap = (board: Board): BoardColorMap =>
-  boardToPieceMap(board).map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
+export const boardToColorMap = (board: Board): BoardColorMap => boardPieceMapToColorMap(boardToPieceMap(board));
 
 export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Position): Piece | null => {
   const row = rowToIndex(position.row) - 1;
@@ -73,4 +72,5 @@ export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Pos
   return null;
 };
 
-
+export const boardPieceMapToColorMap = (boardPieceMap: BoardPieceMap): BoardColorMap =>
+  boardPieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));

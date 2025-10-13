@@ -289,7 +289,7 @@ describe('Move generation for rook', () => {
   });
 });
 
-describe('Move generation for Queen', () => {
+describe('Move generation for queen', () => {
   it('generates all the moves and captures for a queen on d5 (star)', () => {
     const board = createChessBoardFromFen('8/8/8/3Q4/8/8/5K1k/8 w - - 0 1');
     const moves = calculateMoveListForQueen({ column: 'd', row: 5 }, board);
@@ -336,3 +336,4 @@ describe('Move generation for Queen', () => {
     );
   });
 }); 
+
