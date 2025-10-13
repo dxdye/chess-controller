@@ -87,6 +87,14 @@ describe('Move generation for pawn', () => {
       { row: 3, column: 'f', isTaken: true },
     ]);
   });
+  it('generates en passent move for black blocked pawn on e4', () => {
+    const initPos = validFenFrom('rnbqkbnr/pppp1ppp/8/8/3Pp3/1P2P3/P1P2PPP/RNBQKBNR b KQkq d3 0 3');
+    const board = createChessBoardFromFen(initPos);
+    const movesE5 = calculateMoveListForPawn({ column: 'e', row: 4 }, board, 'd');
+
+    expect(movesE5).toEqual([{ row: 3, column: 'd', isTaken: true }]);
+  });
+
 });
 
 describe.skip('Move generation for knight', () => {
