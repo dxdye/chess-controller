@@ -1,5 +1,9 @@
 import { INIT_POSITION } from '../../geometry/constant.ts';
-import { calculateMoveListForPawn, calculateMoveListForKnight } from '../../geometry/move.ts';
+import {
+  calculateMoveListForPawn,
+  calculateMoveListForKnight,
+  calculateMoveListForBishop,
+} from '../../geometry/move.ts';
 import { Fen } from '../../geometry/types.ts';
 import { validFenFrom } from '../../geometry/fen.ts';
 import { createChessBoardFromFen } from '../../geometry/board.ts';
@@ -152,6 +156,65 @@ describe('Move generation for knight', () => {
       expect.arrayContaining([
         { row: 5, column: 'b', isTaken: false },
         { row: 2, column: 'c', isTaken: false },
+      ]),
+    );
+  });
+});
+
+describe('Move generation for bishop', () => {
+  //to be implemented
+  it('generates all the moves and captures for a bishop on f1', () => {
+    const initPos = validFenFrom('rnbqkb1r/1pp2ppp/p3pn2/6NQ/2P1P3/N2p4/PP1P1PPP/R1B1KB1R b KQkq - 1 7');
+    const board = createChessBoardFromFen(initPos);
+    const moves = calculateMoveListForBishop({ column: 'f', row: 1 }, board);
+    expect(moves).toEqual([
+      { row: 2, column: 'e', isTaken: false },
+      { row: 3, column: 'd', isTaken: true },
+    ]);
+  });
+  it('generates all the moves for white bishop on g2, which targets the diagonal a8-h1', () => {
+    const initPos = validFenFrom('rnbqk2r/4bppp/pp2pn2/2p1P1NQ/2P5/N2p2P1/PP1P1PBP/R1B1K2R b KQkq - 2 10');
+    const board = createChessBoardFromFen(initPos);
+    const moves = calculateMoveListForBishop({ column: 'g', row: 2 }, board);
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'f', isTaken: false },
+        { row: 4, column: 'e', isTaken: false },
+        { row: 5, column: 'd', isTaken: false },
+        { row: 6, column: 'c', isTaken: false },
+        { row: 7, column: 'b', isTaken: false },
+        { row: 8, column: 'a', isTaken: true },
+
+        { row: 3, column: 'h', isTaken: false },
+        { row: 1, column: 'f', isTaken: false },
+      ]),
+    );
+    expect(moves).not.toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'f', isTaken: false },
+        { row: 4, column: 'e', isTaken: false },
+        { row: 5, column: 'd', isTaken: false },
+        { row: 6, column: 'c', isTaken: false },
+        { row: 7, column: 'b', isTaken: false },
+        { row: 8, column: 'a', isTaken: false },
+
+        { row: 3, column: 'h', isTaken: false },
+        { row: 1, column: 'f', isTaken: false },
+      ]),
+    );
+  });
+  it('generates all the moves for black bishop on b7, which targets the diagonal a8-h1', () => {
+    const initPos = validFenFrom('rn2k2r/1b2bppp/pp2pn2/2p1P1NQ/2Pq1P2/NP1p2P1/P2P2BP/R1B1K2R b KQkq f3 0 12');
+    const board = createChessBoardFromFen(initPos);
+    const moves = calculateMoveListForBishop({ column: 'b', row: 7 }, board);
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        { row: 8, column: 'c', isTaken: false },
+        { row: 6, column: 'c', isTaken: false },
+        { row: 5, column: 'd', isTaken: false },
+        { row: 4, column: 'e', isTaken: false },
+        { row: 3, column: 'f', isTaken: false },
+        { row: 2, column: 'g', isTaken: true },
       ]),
     );
   });

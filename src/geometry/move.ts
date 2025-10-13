@@ -54,27 +54,29 @@ export const calculateMoveListForBishop = (from: Position, board: Board): Move[]
   directions.map((direction) => {
     let step = 1;
     while (step < 8) {
+      //make sure that it's not infinite loop
       //maybe use range here?..how to break then.. return..
       const updatedRow = current[0] + direction.row * step;
       const updatedCol = current[1] + direction.col * step;
-      const pathBlocked = isPathBlocked(
-        boardColorMap,
-        coordinateToPosition(updatedCol, updatedRow),
-        extractPositionFromMap(boardColorMap, from),
-      );
-      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
-        moves.push({
-          ...coordinateToPosition(updatedCol, updatedRow),
-          isTaken: isPieceTaken(
-            boardColorMap,
-            coordinateToPosition(updatedCol, updatedRow),
-            extractPositionFromMap(boardColorMap, from),
-          ),
-        });
+      const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
+      let pathBlocked = false;
+
+      if (isInBound) {
+        const pos = coordinateToPosition(updatedCol, updatedRow);
+        pathBlocked = isPathBlocked(boardColorMap, pos, extractPositionFromMap(boardColorMap, from));
+        if (!pathBlocked) {
+          //add if not blocked means that piece gets taken or empty square
+          moves.push({
+            ...pos,
+            isTaken: isPieceTaken(boardColorMap, pos, extractPositionFromMap(boardColorMap, from)),
+          });
+        }
       } else {
+        //if coordinates are out of bounds, break the loop
         break;
       }
       if (pathBlocked) {
+        //if path is blocked, there is no reason to continue in this direction
         break;
       }
 
@@ -188,14 +190,15 @@ export const calculateMoveListForQueen = (from: Position, board: Board): Move[] 
       //this could be optimized by extracting common logic with rook and bishop
       //it's repeated code
       //maybe extract this later to a helper function
-      const updatedRow = current[0] + direction.row * step;
-      const updatedCol = current[1] + direction.col * step;
+      const updatedRow = current[0] + direction.row * step + 1;
+      const updatedCol = current[1] + direction.col * step + 1;
+      const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
       const pathBlocked = isPathBlocked(
         boardColorMap,
         coordinateToPosition(updatedCol, updatedRow),
         extractPositionFromMap(boardColorMap, from),
       );
-      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
+      if (isInBound && !pathBlocked) {
         moves.push({
           ...coordinateToPosition(updatedCol, updatedRow),
           isTaken: isPieceTaken(
