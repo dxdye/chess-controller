@@ -5,6 +5,7 @@ export const FigureLetters = ['k', 'q', 'r', 'b', 'n', 'p', 'K', 'Q', 'R', 'B', 
 export type Row = (typeof Rows)[number];
 export type Column = (typeof Columns)[number];
 export type FigureLetter = (typeof FigureLetters)[number];
+export type EnPassentColumn = Column | '-';
 
 export type Color = 'white' | 'black' | 'none';
 export type Figure = 'PAWN' | 'KNIGHT' | 'BISHOP' | 'ROOK' | 'KING' | 'QUEEN';
