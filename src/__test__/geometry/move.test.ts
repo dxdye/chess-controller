@@ -67,6 +67,16 @@ describe('Move generation for pawn', () => {
       { row: 4, column: 'd', isTaken: true },
     ]);
   });
+  it('generates capture moves for white pawn on c2', () => {
+    const initPos = validFenFrom('rnbqkbnr/pppp1ppp/8/8/8/1P1pP3/P1P2PPP/RNBQKBNR w KQkq - 0 4');
+    const board = createChessBoardFromFen(initPos);
+    const movesC2 = calculateMoveListForPawn({ column: 'c', row: 2 }, board);
+    expect(movesC2).toEqual([
+      { row: 3, column: 'c', isTaken: false },
+      { row: 3, column: 'd', isTaken: true },
+      { row: 4, column: 'c', isTaken: false },
+    ]);
+  });
 
   it('generates en passant move for white pawn on e5', () => {
     const initPos = validFenFrom('rnbqkbnr/p1p1pppp/8/1p1pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3');
