@@ -14,7 +14,7 @@ export type Position = {
   row: Row;
   column: Column;
 };
-export type Move = Position & { isTaken?: boolean };
+export type Move = Position & { isTaken?: boolean; isTakenEnPassent?: boolean };
 export type Piece = {
   color: Color;
   figure: Figure;
