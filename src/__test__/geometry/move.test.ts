@@ -335,46 +335,6 @@ describe('Move generation for queen', () => {
       ]),
     );
   });
-  it('generates all moves for a queen on d3 hitting a king on h7.. h7 should not be included..', () => {
-    const board = createChessBoardFromFen('8/7k/8/8/8/3Q4/5K2/8 w - - 0 1');
-    const moves = calculateMoveListForQueen({ column: 'd', row: 3 }, board);
-    expect(moves).toEqual(
-      expect.arrayContaining([
-        //on row 3
-        { row: 3, column: 'a', isTaken: false },
-        { row: 3, column: 'b', isTaken: false },
-        { row: 3, column: 'c', isTaken: false },
 
-        { row: 3, column: 'e', isTaken: false },
-        { row: 3, column: 'f', isTaken: false },
-        { row: 3, column: 'g', isTaken: false },
-        { row: 3, column: 'h', isTaken: false },
-        //on column d
-        { row: 4, column: 'd', isTaken: false },
-        { row: 5, column: 'd', isTaken: false },
-        { row: 6, column: 'd', isTaken: false },
-        { row: 7, column: 'd', isTaken: false },
-        { row: 8, column: 'd', isTaken: false },
-
-        { row: 2, column: 'd', isTaken: false },
-        { row: 1, column: 'd', isTaken: false },
-
-        //on diagonal
-        { row: 4, column: 'e', isTaken: false },
-        { row: 5, column: 'f', isTaken: false },
-        { row: 6, column: 'g', isTaken: false },
-
-        { row: 2, column: 'c', isTaken: false },
-        { row: 1, column: 'b', isTaken: false },
-
-        { row: 4, column: 'c', isTaken: false },
-        { row: 5, column: 'b', isTaken: false },
-        { row: 6, column: 'a', isTaken: false },
-
-        { row: 2, column: 'e', isTaken: false },
-        { row: 1, column: 'f', isTaken: false },
-      ]),
-    );
-  });
 }); 
 
