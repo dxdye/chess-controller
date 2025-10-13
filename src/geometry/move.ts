@@ -1,12 +1,12 @@
 import { isKingChecked } from './check.ts';
-import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn } from './types.ts';
+import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn, BoardPieceMap } from './types.ts';
 import { positionToCoordinate, boardToColorMap, boardToPieceMap, boardPieceMapToColorMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';
 import { match } from 'ts-pattern';
 import { BLACK_EN_PASSENT_ROW, SECOND_ROW, SEVENTH_ROW, WHITE_EN_PASSENT_ROW } from './constant.ts';
 
-const extractPositionFromMap = (boardColorMap: BoardColorMap, target: Position): Color => {
+const extractColorFromMap = (boardColorMap: BoardColorMap, target: Position): Color => {
   const targetCoord = positionToCoordinate(target);
   const row = boardColorMap[targetCoord[0] - 1] ?? [];
   return row[targetCoord[1] - 1] ?? 'none';
@@ -14,22 +14,29 @@ const extractPositionFromMap = (boardColorMap: BoardColorMap, target: Position):
 
 const isPieceCaptured = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
   //a piece gets taken when the target position is occupied by an opponent piece
-  const targetColor = extractPositionFromMap(boardColorMap, target);
+  const targetColor = extractColorFromMap(boardColorMap, target);
 
   return targetColor !== 'none' && targetColor !== ownColor;
 };
 const isPathBlocked = (boardColorMap: BoardColorMap, target: Position, ownColor: Color): boolean => {
   //a piece gets taken when the target position is occupied by an opponent piece
-  const targetColor = extractPositionFromMap(boardColorMap, target);
+  const targetColor = extractColorFromMap(boardColorMap, target);
   return targetColor === ownColor;
 };
 const isPawnCaptureBlocked = (boardToColorMap: BoardColorMap, target: Position, ownColor: Color) => {
-  const targetColor = extractPositionFromMap(boardToColorMap, target);
+  const targetColor = extractColorFromMap(boardToColorMap, target); //warning: back and forth conversion of position to coordinate
   return targetColor === 'none' || targetColor === ownColor;
 };
 
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
+
+// const isKingHit = (boardPieceMap: BoardPieceMap, target: Position) => {
+//   const targetCoord = positionToCoordinate(target);
+//   const piece = boardPieceMap.at(targetCoord[0] - 1)?.at(targetCoord[1] - 1);
+//   if (isNil(piece)) return false;
+//   return piece?.figure !== 'KING';
+// };
 
 const moveDirection = (directions: readonly Direction[], from: Position, moves: Move[], board: Board): Move[] => {
   //crawl in given directions until path is blocked or out of bounds
@@ -49,9 +56,10 @@ const moveDirection = (directions: readonly Direction[], from: Position, moves: 
 
       if (isInBound) {
         const updatedPos = coordinateToPosition(updatedCol, updatedRow);
-        const fromColor = extractPositionFromMap(boardColorMap, from);
+        const fromColor = extractColorFromMap(boardColorMap, from);
         pathBlocked = isPathBlocked(boardColorMap, updatedPos, fromColor);
         isTaken = isPieceCaptured(boardColorMap, updatedPos, fromColor);
+
         if (!pathBlocked) {
           moves.push({ ...updatedPos, isTaken: isTaken });
         }
@@ -105,7 +113,7 @@ export const calculateMoveListForKnight = (from: Position, board: Board): Move[]
       !isPathBlocked(
         boardColorMap,
         coordinateToPosition(updatedCol, updatedRow),
-        extractPositionFromMap(boardColorMap, from),
+        extractColorFromMap(boardColorMap, from),
       )
     ) {
       moves.push({
@@ -113,7 +121,7 @@ export const calculateMoveListForKnight = (from: Position, board: Board): Move[]
         isTaken: isPieceCaptured(
           boardColorMap,
           coordinateToPosition(updatedCol, updatedRow),
-          extractPositionFromMap(boardColorMap, from),
+          extractColorFromMap(boardColorMap, from),
         ),
       });
     }
@@ -174,16 +182,16 @@ export const calculateMoveListForKing = (
     const updatedPos = coordinateToPosition(updatedCol, updatedRow);
     const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
     if (isInBound) {
-      if (!isPathBlocked(boardColorMap, updatedPos, extractPositionFromMap(boardColorMap, from))) {
+      if (!isPathBlocked(boardColorMap, updatedPos, extractColorFromMap(boardColorMap, from))) {
         moves.push({
           ...updatedPos,
-          isTaken: isPieceCaptured(boardColorMap, updatedPos, extractPositionFromMap(boardColorMap, from)),
+          isTaken: isPieceCaptured(boardColorMap, updatedPos, extractColorFromMap(boardColorMap, from)),
         });
       }
     }
   });
   //castling logic
-  if (isCastlingPossible && !isKingChecked(board, extractPositionFromMap(boardColorMap, from))) {
+  if (isCastlingPossible && !isKingChecked(board, extractColorFromMap(boardColorMap, from))) {
     //
   }
 
