@@ -9,9 +9,10 @@ export const positionToCoordinate = (position: Position): [CY, CX] => [
 ];
 
 export const createChessBoardFromFen = (fen: Fen): Board => {
+  //redundant parts of fen ignored for now
   if (!isValidFen(fen)) throw new Error('Invalid Fen string');
 
-  const [piecePlacement] = fen.split(' ');
+  const [piecePlacement] = fen.split(' '); //redundant parts ignored for now
   if (isNil(piecePlacement)) throw new Error('Invalid Fen string. No piece placement');
 
   const rows = piecePlacement?.split('/');

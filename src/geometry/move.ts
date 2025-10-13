@@ -467,8 +467,24 @@ export const isKingChecked = (board: Board, color: Color): boolean => {
   }
 };
 
-export const isCheckMate = (
-  board: Board,
-  color: Color,
-): boolean => //king has no moves.. and is checked
-  calculateMoveListForKing(findKingPosition(board, color)!, board).length === 0 && isKingChecked(board, color);
+export const isCheckMate = (board: Board, color: Color): boolean => {
+  //king has no moves.. and is checked
+  const position = findKingPosition(board, color);
+  if (position === undefined) {
+    throw new Error('King not found on the board');
+  } else {
+    return calculateMoveListForKing(position, board).length === 0 && isKingChecked(board, color);
+  }
+};
+
+export const isStaleMate = (board: Board, color: Color): boolean => {
+  //king has no moves.. and is not checked
+  //king has no moves.. and is checked
+  const position = findKingPosition(board, color);
+  if (position === undefined) {
+    throw new Error('King not found on the board');
+  } else {
+    return calculateMoveListForKing(position, board).length === 0 && !isKingChecked(board, color);
+  }
+};
+

@@ -1,5 +1,5 @@
 import { INIT_POSITION } from '../../geometry/constant.ts';
-import { calculateMoveListForPawn } from '../../geometry/move.ts';
+import { calculateMoveListForPawn, calculateMoveListForKnight } from '../../geometry/move.ts';
 import { Fen } from '../../geometry/types.ts';
 import { validFenFrom } from '../../geometry/fen.ts';
 import { createChessBoardFromFen } from '../../geometry/board.ts';
@@ -104,9 +104,55 @@ describe('Move generation for pawn', () => {
 
     expect(movesE5).toEqual([{ row: 3, column: 'd', isTaken: true }]);
   });
-
+  it('generates en passent move for black pawn on d4 with capture', () => {
+    const initPos = validFenFrom('rnbqkbnr/ppp1pppp/8/8/2Pp4/4PN2/PP1P1PPP/RNBQKB1R b KQkq c3 0 3');
+    const board = createChessBoardFromFen(initPos);
+    const movesD4 = calculateMoveListForPawn({ column: 'd', row: 4 }, board, 'c');
+    expect(movesD4).toEqual([
+      { row: 3, column: 'd', isTaken: false },
+      { row: 3, column: 'e', isTaken: true },
+      { row: 3, column: 'c', isTaken: true },
+    ]);
+  });
 });
 
-describe.skip('Move generation for knight', () => {
-  //to do
+describe('Move generation for knight', () => {
+  it('generates all the moves and captures for white knight on f3.', () => {
+    const initPos: Fen = 'rnbqkbnr/ppp2ppp/4p3/8/2Pp4/4PN2/PP1P1PPP/RNBQKB1R w KQkq - 0 4';
+    const board = createChessBoardFromFen(initPos);
+    const movesF3 = calculateMoveListForKnight({ column: 'f', row: 3 }, board);
+    expect(movesF3).toEqual([
+      { row: 5, column: 'g', isTaken: false },
+      { row: 5, column: 'e', isTaken: false },
+      { row: 1, column: 'g', isTaken: false },
+      { row: 4, column: 'h', isTaken: false },
+      { row: 4, column: 'd', isTaken: true },
+    ]);
+  });
+  it('generate all the moves and captures for a black knight on f6', () => {
+    const initPos = 'rnbqkb1r/ppp2ppp/4pn2/6NQ/2P1P3/3p4/PP1P1PPP/RNB1KB1R b KQkq - 1 6';
+    const board = createChessBoardFromFen(initPos);
+    const movesF3 = calculateMoveListForKnight({ column: 'f', row: 6 }, board);
+    expect(movesF3).toEqual(
+      expect.arrayContaining([
+        { row: 5, column: 'h', isTaken: true },
+        { row: 8, column: 'g', isTaken: false },
+        { row: 7, column: 'd', isTaken: false },
+        { row: 5, column: 'd', isTaken: false },
+        { row: 4, column: 'g', isTaken: false },
+        { row: 4, column: 'e', isTaken: true },
+      ]),
+    );
+  });
+  it('generates all the moves for a knight on a3 (on the rim)', () => {
+    const initPos = 'rnbqkb1r/1pp2ppp/p3pn2/6NQ/2P1P3/N2p4/PP1P1PPP/R1B1KB1R b KQkq - 1 7';
+    const board = createChessBoardFromFen(initPos);
+    const movesA3 = calculateMoveListForKnight({ column: 'a', row: 3 }, board);
+    expect(movesA3).toEqual(
+      expect.arrayContaining([
+        { row: 5, column: 'b', isTaken: false },
+        { row: 2, column: 'c', isTaken: false },
+      ]),
+    );
+  });
 });
