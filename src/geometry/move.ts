@@ -41,41 +41,34 @@ const isPawnCaptureBlocked = (boardToColorMap: BoardColorMap, target: Position, 
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
 
-export const calculateMoveListForBishop = (from: Position, board: Board): Move[] => {
-  const moves: Move[] = [];
+const moveDirection = (directions: readonly Direction[], from: Position, moves: Move[], board: Board): Move[] => {
   const current = positionToCoordinate(from);
   const boardColorMap = boardToColorMap(board);
-  const directions: Direction[] = [
-    { row: 1, col: 1 },
-    { row: 1, col: -1 },
-    { row: -1, col: 1 },
-    { row: -1, col: -1 },
-  ] as const;
   directions.map((direction) => {
+    //repeated code!!
     let step = 1;
     while (step < 8) {
-      //make sure that it's not infinite loop
       //maybe use range here?..how to break then.. return..
       const updatedRow = current[0] + direction.row * step;
       const updatedCol = current[1] + direction.col * step;
+
       const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
       let pathBlocked = false;
+      let isTaken = false;
 
       if (isInBound) {
-        const pos = coordinateToPosition(updatedCol, updatedRow);
-        pathBlocked = isPathBlocked(boardColorMap, pos, extractPositionFromMap(boardColorMap, from));
+        const updatedPos = coordinateToPosition(updatedCol, updatedRow);
+        const fromColor = extractPositionFromMap(boardColorMap, from);
+        pathBlocked = isPathBlocked(boardColorMap, updatedPos, fromColor);
+        isTaken = isPieceTaken(boardColorMap, updatedPos, fromColor);
         if (!pathBlocked) {
-          //add if not blocked means that piece gets taken or empty square
-          moves.push({
-            ...pos,
-            isTaken: isPieceTaken(boardColorMap, pos, extractPositionFromMap(boardColorMap, from)),
-          });
+          moves.push({ ...updatedPos, isTaken: isTaken });
         }
       } else {
         //if coordinates are out of bounds, break the loop
         break;
       }
-      if (pathBlocked) {
+      if (pathBlocked || isTaken) {
         //if path is blocked, there is no reason to continue in this direction
         break;
       }
@@ -84,6 +77,17 @@ export const calculateMoveListForBishop = (from: Position, board: Board): Move[]
     }
   });
   return moves;
+}; //will be used for rook, bishop, queen
+
+export const calculateMoveListForBishop = (from: Position, board: Board): Move[] => {
+  const moves: Move[] = [];
+  const directions: Direction[] = [
+    { row: 1, col: 1 },
+    { row: 1, col: -1 },
+    { row: -1, col: 1 },
+    { row: -1, col: -1 },
+  ] as const;
+  return moveDirection(directions, from, moves, board);
 };
 
 export const calculateMoveListForKnight = (from: Position, board: Board): Move[] => {
@@ -129,95 +133,28 @@ export const calculateMoveListForKnight = (from: Position, board: Board): Move[]
 
 export const calculateMoveListForRook = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
-  const current = positionToCoordinate(from);
-  const boardColorMap = boardToColorMap(board);
   const directions: Direction[] = [
     { row: 1, col: 0 },
     { row: -1, col: 0 },
     { row: 0, col: 1 },
     { row: 0, col: -1 },
   ] as const;
-  directions.map((direction) => {
-    let step = 1;
-    while (step < 8) {
-      //maybe use range here?..how to break then.. return..
-      const updatedRow = current[0] + direction.row * step;
-      const updatedCol = current[1] + direction.col * step;
-      const pathBlocked = isPathBlocked(
-        boardColorMap,
-        coordinateToPosition(updatedCol, updatedRow),
-        extractPositionFromMap(boardColorMap, from),
-      );
-      if (isIndexInBound(updatedRow) && isIndexInBound(updatedCol) && !pathBlocked) {
-        moves.push({
-          ...coordinateToPosition(updatedCol, updatedRow),
-          isTaken: isPieceTaken(
-            boardColorMap,
-            coordinateToPosition(updatedCol, updatedRow),
-            extractPositionFromMap(boardColorMap, from),
-          ),
-        });
-      } else {
-        break;
-      }
-      if (pathBlocked) {
-        break;
-      }
-
-      ++step;
-    }
-  });
-  return moves;
+  return moveDirection(directions, from, moves, board);
 };
 
 export const calculateMoveListForQueen = (from: Position, board: Board): Move[] => {
   const moves: Move[] = [];
-  const current = positionToCoordinate(from);
-  const boardColorMap = boardToColorMap(board);
   const directions: Direction[] = [
-    { row: 1, col: 0 },
-    { row: -1, col: 0 },
-    { row: 0, col: 1 },
-    { row: 0, col: -1 },
     { row: 1, col: 1 },
     { row: 1, col: -1 },
     { row: -1, col: 1 },
     { row: -1, col: -1 },
+    { row: 1, col: 0 },
+    { row: -1, col: 0 },
+    { row: 0, col: 1 },
+    { row: 0, col: -1 },
   ] as const;
-  directions.map((direction) => {
-    let step = 1;
-    while (step < 8) {
-      //this could be optimized by extracting common logic with rook and bishop
-      //it's repeated code
-      //maybe extract this later to a helper function
-      const updatedRow = current[0] + direction.row * step + 1;
-      const updatedCol = current[1] + direction.col * step + 1;
-      const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
-      const pathBlocked = isPathBlocked(
-        boardColorMap,
-        coordinateToPosition(updatedCol, updatedRow),
-        extractPositionFromMap(boardColorMap, from),
-      );
-      if (isInBound && !pathBlocked) {
-        moves.push({
-          ...coordinateToPosition(updatedCol, updatedRow),
-          isTaken: isPieceTaken(
-            boardColorMap,
-            coordinateToPosition(updatedCol, updatedRow),
-            extractPositionFromMap(boardColorMap, from),
-          ),
-        });
-      } else {
-        break;
-      }
-      if (pathBlocked) {
-        break;
-      }
-
-      ++step;
-    }
-  });
-  return moves;
+  return moveDirection(directions, from, moves, board);
 };
 
 export const calculateMoveListForKing = (

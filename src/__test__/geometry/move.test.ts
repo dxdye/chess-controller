@@ -3,6 +3,8 @@ import {
   calculateMoveListForPawn,
   calculateMoveListForKnight,
   calculateMoveListForBishop,
+  calculateMoveListForRook,
+  calculateMoveListForQueen,
 } from '../../geometry/move.ts';
 import { Fen } from '../../geometry/types.ts';
 import { validFenFrom } from '../../geometry/fen.ts';
@@ -218,4 +220,119 @@ describe('Move generation for bishop', () => {
       ]),
     );
   });
+  it('generates empty move for bishop in init position on c1 and f1', () => {
+    const initPos: Fen = INIT_POSITION;
+    const board = createChessBoardFromFen(initPos);
+    const movesC1 = calculateMoveListForBishop({ column: 'c', row: 1 }, board);
+    const movesF1 = calculateMoveListForBishop({ column: 'f', row: 1 }, board);
+    //assert
+    expect(movesC1).toEqual([]);
+    expect(movesF1).toEqual([]);
+  });
 });
+
+describe('Move generation for rook', () => {
+  it('generates all the moves and captures for a rook on h1 (capture queen on g1', () => {
+    const board = createChessBoardFromFen('rn2k2r/1b2bppp/pp2pn2/2p1P1NQ/2P2P2/NP1p2P1/P2P2BP/R1B1K1qR w KQkq - 1 13');
+    const moves = calculateMoveListForRook({ column: 'h', row: 1 }, board);
+    expect(moves).toEqual([{ row: 1, column: 'g', isTaken: true }]);
+  });
+  it('generates all the moves for a rook on a3 (swiss-cross on the rim)', () => {
+    const board = createChessBoardFromFen('8/8/8/8/8/R7/8/5K1k w - - 0 1');
+    const moves = calculateMoveListForRook({ column: 'a', row: 3 }, board);
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'b', isTaken: false },
+        { row: 3, column: 'c', isTaken: false },
+        { row: 3, column: 'd', isTaken: false },
+        { row: 3, column: 'e', isTaken: false },
+        { row: 3, column: 'f', isTaken: false },
+        { row: 3, column: 'g', isTaken: false },
+        { row: 3, column: 'h', isTaken: false },
+
+        { row: 4, column: 'a', isTaken: false },
+        { row: 5, column: 'a', isTaken: false },
+        { row: 6, column: 'a', isTaken: false },
+        { row: 7, column: 'a', isTaken: false },
+        { row: 8, column: 'a', isTaken: false },
+
+        { row: 2, column: 'a', isTaken: false },
+        { row: 1, column: 'a', isTaken: false },
+      ]),
+    );
+  });
+  it('generates all the moves for a rook on d5', () => {
+    const board = createChessBoardFromFen('8/8/8/3R4/8/8/5K1k/8 w - - 0 1');
+    const moves = calculateMoveListForRook({ column: 'd', row: 5 }, board);
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        //on row 5
+        { row: 5, column: 'a', isTaken: false },
+        { row: 5, column: 'b', isTaken: false },
+        { row: 5, column: 'c', isTaken: false },
+
+        { row: 5, column: 'e', isTaken: false },
+        { row: 5, column: 'f', isTaken: false },
+        { row: 5, column: 'g', isTaken: false },
+        { row: 5, column: 'h', isTaken: false },
+        //on column d
+        { row: 6, column: 'd', isTaken: false },
+        { row: 7, column: 'd', isTaken: false },
+        { row: 8, column: 'd', isTaken: false },
+
+        { row: 4, column: 'd', isTaken: false },
+        { row: 3, column: 'd', isTaken: false },
+        { row: 2, column: 'd', isTaken: false },
+        { row: 1, column: 'd', isTaken: false },
+      ]),
+    );
+  });
+});
+
+describe('Move generation for Queen', () => {
+  it('generates all the moves and captures for a queen on d5 (star)', () => {
+    const board = createChessBoardFromFen('8/8/8/3Q4/8/8/5K1k/8 w - - 0 1');
+    const moves = calculateMoveListForQueen({ column: 'd', row: 5 }, board);
+
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        //on row 5
+        { row: 5, column: 'a', isTaken: false },
+        { row: 5, column: 'b', isTaken: false },
+        { row: 5, column: 'c', isTaken: false },
+
+        { row: 5, column: 'e', isTaken: false },
+        { row: 5, column: 'f', isTaken: false },
+        { row: 5, column: 'g', isTaken: false },
+        { row: 5, column: 'h', isTaken: false },
+        //on column d
+        { row: 6, column: 'd', isTaken: false },
+        { row: 7, column: 'd', isTaken: false },
+        { row: 8, column: 'd', isTaken: false },
+
+        { row: 4, column: 'd', isTaken: false },
+        { row: 3, column: 'd', isTaken: false },
+        { row: 2, column: 'd', isTaken: false },
+        { row: 1, column: 'd', isTaken: false },
+
+        //on diagonal
+        { row: 6, column: 'e', isTaken: false },
+        { row: 7, column: 'f', isTaken: false },
+        { row: 8, column: 'g', isTaken: false },
+
+        { row: 4, column: 'c', isTaken: false },
+        { row: 3, column: 'b', isTaken: false },
+        { row: 2, column: 'a', isTaken: false },
+
+        { row: 6, column: 'c', isTaken: false },
+        { row: 7, column: 'b', isTaken: false },
+        { row: 8, column: 'a', isTaken: false },
+
+        { row: 4, column: 'e', isTaken: false },
+        { row: 3, column: 'f', isTaken: false },
+        { row: 2, column: 'g', isTaken: false },
+        { row: 1, column: 'h', isTaken: false },
+      ]),
+    );
+  });
+}); 
