@@ -1,5 +1,5 @@
 import { isKingChecked } from './check.ts';
-import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn, BoardPieceMap } from './types.ts';
+import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn } from './types.ts';
 import { positionToCoordinate, boardToColorMap, boardToPieceMap, boardPieceMapToColorMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';
@@ -165,6 +165,8 @@ export const calculateMoveListForKing = (
   const current = positionToCoordinate(from);
   const pieceMap = boardToPieceMap(board);
   const boardColorMap = pieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
+  const color = extractColorFromMap(boardColorMap, from);
+
   const kingMoves = [
     { row: 1, col: 0 },
     { row: -1, col: 0 },
@@ -182,17 +184,33 @@ export const calculateMoveListForKing = (
     const updatedPos = coordinateToPosition(updatedCol, updatedRow);
     const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
     if (isInBound) {
-      if (!isPathBlocked(boardColorMap, updatedPos, extractColorFromMap(boardColorMap, from))) {
-        moves.push({
-          ...updatedPos,
-          isTaken: isPieceCaptured(boardColorMap, updatedPos, extractColorFromMap(boardColorMap, from)),
-        });
+      //only add move if king will not be in check!
+      // <=> king is not touching other king
+
+      //only add move if path isn't blocked by own piece
+      if (!isPathBlocked(boardColorMap, updatedPos, color)) {
+        moves.push({ ...updatedPos, isTaken: isPieceCaptured(boardColorMap, updatedPos, color) });
       }
     }
   });
   //castling logic
+  //evaluated externally:
+  //king has moved, prevents color castling
+  //white left rook moved, prevents white queen side castle
+  //white right rook moved, prevents white king side castle
+  //black right rook moved, prevents black king side castle
+  //black left rook moved, prevents black queen side castle
+
+  //evaluate following conditions:
+  //path between rook and king is empty
+  //king isn't in check
+  //king wouldn't be in check after castling (also the square the king passes over)
+
+  const fromColor = extractColorFromMap(boardColorMap, from);
   if (isCastlingPossible && !isKingChecked(board, extractColorFromMap(boardColorMap, from))) {
-    //
+    // if(fromColor === 'white') {
+    // } else {
+    // }
   }
 
   return moves;
