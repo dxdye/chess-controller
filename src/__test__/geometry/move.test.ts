@@ -6,10 +6,12 @@ import {
   calculateMoveListForRook,
   calculateMoveListForQueen,
   calculateMoveListForPiece,
+  calculateMoveListForKing,
 } from '../../geometry/move.ts';
 import { Fen } from '../../geometry/types.ts';
 import { validFenFrom } from '../../geometry/fen.ts';
 import { createChessBoardFromFen } from '../../geometry/board.ts';
+import { isKingChecked } from '../../geometry/check.ts';
 
 describe('Move generation for pawn', () => {
   it('generates all the moves for an e2, a2, h2 pawn in init position', () => {
@@ -339,7 +341,39 @@ describe('Move generation for queen', () => {
   //all other queen tests are covered by rook and bishop tests
 });
 
-describe('Move generation for king', () => {});
+describe('Move generation for king', () => {
+  it('generates all the moves for a king on d4', () => {
+    const board = createChessBoardFromFen('8/8/8/7k/3K4/8/8/8 w - - 0 1');
+    const moves = calculateMoveListForKing({ column: 'd', row: 4 }, board, false, false);
+    expect(moves).toEqual(
+      expect.arrayContaining([
+        { row: 5, column: 'c', isTaken: false },
+        { row: 5, column: 'd', isTaken: false },
+        { row: 5, column: 'e', isTaken: false },
+        { row: 4, column: 'e', isTaken: false },
+        { row: 4, column: 'c', isTaken: false },
+        { row: 3, column: 'e', isTaken: false },
+        { row: 3, column: 'd', isTaken: false },
+        { row: 3, column: 'c', isTaken: false },
+      ]),
+    );
+  });
+  it.only('generates moves for checked king in bishop direction', () => {
+    const board = createChessBoardFromFen('8/6b1/8/7k/3K4/8/8/8 w - - 0 1');
+    const kingIsChecked = isKingChecked(board, 'white');
+    const moves = calculateMoveListForKing({ column: 'd', row: 4 }, board, kingIsChecked, false);
+    expect(moves).toStrictEqual([
+      { row: 5, column: 'd', isTaken: false },
+      { row: 3, column: 'd', isTaken: false },
+      { row: 4, column: 'e', isTaken: false },
+      { row: 4, column: 'c', isTaken: false },
+      { row: 5, column: 'c', isTaken: false },
+      { row: 3, column: 'e', isTaken: false },
+
+      //not allowed: e5, c3 (checked by bishop)
+    ]);
+  });
+});
 
 describe('calculates moves for arbitrary peace', () => {
   it('returns an empty move list if king is checked by pawn', () => {

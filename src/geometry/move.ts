@@ -167,6 +167,7 @@ export const calculateMoveListForKing = (
   const pieceMap = boardToPieceMap(board);
   const boardColorMap = pieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
   const color = extractColorFromMap(boardColorMap, from);
+  const boardWithoutKing = board.filter((piece) => piece.row !== from.row && piece.column !== from.column);
 
   const kingMoves = [
     { row: 1, col: 0 },
@@ -187,7 +188,12 @@ export const calculateMoveListForKing = (
     if (isInBound) {
       //only add move if king will not be in check!
       // <=> king is not touching other king
-      const updatedPosIsThreat = wouldPositionBeChecked(board, updatedPos, color);
+      const updatedPosIsThreat = wouldPositionBeChecked(
+        //remove king from board to avoid blocking the algorithm
+        boardWithoutKing,
+        updatedPos,
+        color,
+      );
 
       //only add move if path isn't blocked by own piece
       //and if new position is not threatened by opponent piece
@@ -196,6 +202,7 @@ export const calculateMoveListForKing = (
       }
     }
   });
+
   //castling logic
   //evaluated externally:
   //king has moved, prevents color castling
@@ -216,20 +223,15 @@ export const calculateMoveListForKing = (
       (fromColor === 'white' &&
         isPathEmpty(boardColorMap, { row: 1, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'g' }) &&
-        !wouldPositionBeChecked(board, { row: 1, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(board, { row: 1, column: 'g' }, fromColor)) ||
+        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'f' }, fromColor) &&
+        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor)) ||
       (fromColor === 'black' &&
         isPathEmpty(boardColorMap, { row: 8, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'g' }) &&
-        !wouldPositionBeChecked(board, { row: 8, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(board, { row: 8, column: 'g' }, fromColor))
+        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'f' }, fromColor) &&
+        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'g' }, fromColor))
     ) {
-      moves.push({
-        row: from.row,
-        column: 'g',
-        isTaken: false,
-        isCastle: fromColor === 'white' ? 'K' : 'k',
-      });
+      moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: fromColor === 'white' ? 'K' : 'k' });
     }
     //queen side castling
     if (
@@ -246,7 +248,7 @@ export const calculateMoveListForKing = (
         !wouldPositionBeChecked(board, { row: 8, column: 'd' }, fromColor) &&
         !wouldPositionBeChecked(board, { row: 8, column: 'c' }, fromColor))
     ) {
-      moves.push({ row: from.row, column: 'c', isTaken: false });
+      moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: fromColor === 'white' ? 'Q' : 'q' });
     }
   }
 
