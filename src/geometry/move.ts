@@ -156,6 +156,8 @@ export const calculateMoveListForQueen = (from: Position, board: Board): Move[] 
   return moveDirection(directions, from, moves, board);
 };
 
+
+
 export const calculateMoveListForKing = (
   from: Position,
   board: Board,
@@ -167,7 +169,7 @@ export const calculateMoveListForKing = (
   const pieceMap = boardToPieceMap(board);
   const boardColorMap = pieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
   const color = extractColorFromMap(boardColorMap, from);
-  const boardWithoutKing = board.filter((piece) => piece.row !== from.row && piece.column !== from.column);
+  const boardWithoutKing = board.filter((square) => !(square.figure === 'KING' && square.color === color)); //remove own king from board to avoid blocking the algorithm
 
   const kingMoves = [
     { row: 1, col: 0 },
@@ -183,21 +185,17 @@ export const calculateMoveListForKing = (
   kingMoves.map((move) => {
     const updatedRow = current[0] + move.row;
     const updatedCol = current[1] + move.col;
-    const updatedPos = coordinateToPosition(updatedCol, updatedRow);
     const isInBound = isIndexInBound(updatedRow) && isIndexInBound(updatedCol);
     if (isInBound) {
       //only add move if king will not be in check!
       // <=> king is not touching other king
-      const updatedPosIsThreat = wouldPositionBeChecked(
-        //remove king from board to avoid blocking the algorithm
-        boardWithoutKing,
-        updatedPos,
-        color,
-      );
+      const updatedPos = coordinateToPosition(updatedCol, updatedRow);
+      //remove king from board to avoid blocking the algorithm
+      const updatedPosIsThreatened = wouldPositionBeChecked(boardWithoutKing, updatedPos, color);
 
       //only add move if path isn't blocked by own piece
       //and if new position is not threatened by opponent piece
-      if (!isPathBlocked(boardColorMap, updatedPos, color) && !updatedPosIsThreat) {
+      if (!isPathBlocked(boardColorMap, updatedPos, color) && !updatedPosIsThreatened) {
         moves.push({ ...updatedPos, isTaken: isPieceCaptured(boardColorMap, updatedPos, color) });
       }
     }
