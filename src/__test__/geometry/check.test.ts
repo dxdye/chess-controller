@@ -14,13 +14,21 @@ describe('King is checked', () => {
     expect(resNotChecked).not.toBe(true);
   });
   it('proves that black king on g8 is checked in rook direction', () => {
-    const boardRook = createChessBoardFromFen('6k1/p7/8/8/8/8/6R1/2K5 w - - 0 1');
+    const boardRook = createChessBoardFromFen('6k1/p7/8/8/8/8/6R1/2K5 w - - 0 1'); //vertical rook
+    const boardRook2 = createChessBoardFromFen('8/8/8/3R3k/3K4/8/8/8 w - - 0 1'); //horizontal rook
+    const boardRook3 = createChessBoardFromFen('8/8/8/3R2k1/3K4/8/8/8 w - - 0 1'); //horizontal rook
     const boardQueen = createChessBoardFromFen('6k1/p7/8/8/8/8/6Q1/2K5 w - - 0 1');
     const boardNotChecked = createChessBoardFromFen('3RQ3/p6R/5k2/7R/8/6R1/3K4/8 w - - 0 1');
     const resR = isKingChecked(boardRook, 'black');
+    const resR2 = isKingChecked(boardRook2, 'black');
+    const resR3 = isKingChecked(boardRook3, 'black');
     const resQ = isKingChecked(boardQueen, 'black');
     const resNotChecked = isKingChecked(boardNotChecked, 'black');
+    const resR3PositionChecked = isKingChecked(boardRook3, 'black');
     expect(resR).toBe(true);
+    expect(resR2).toBe(true);
+    expect(resR3).toBe(true);
+    expect(resR3PositionChecked).toBe(true);
     expect(resQ).toBe(true);
     expect(resNotChecked).not.toBe(true);
   });

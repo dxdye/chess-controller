@@ -358,7 +358,7 @@ describe('Move generation for king', () => {
       ]),
     );
   });
-  it.only('generates moves for checked king in bishop direction', () => {
+  it('generates moves for checked king in bishop direction', () => {
     const board = createChessBoardFromFen('8/6b1/8/7k/3K4/8/8/8 w - - 0 1');
     const kingIsChecked = isKingChecked(board, 'white');
     const moves = calculateMoveListForKing({ column: 'd', row: 4 }, board, kingIsChecked, false);
@@ -372,6 +372,20 @@ describe('Move generation for king', () => {
 
       //not allowed: e5, c3 (checked by bishop)
     ]);
+  });
+  it('generates moves for checked king in rook direction', () => {
+    const board = createChessBoardFromFen('8/8/8/3R3k/3K4/8/8/8 w - - 0 1');
+    const kingIsChecked = isKingChecked(board, 'black');
+    const moves = calculateMoveListForKing({ column: 'h', row: 5 }, board, kingIsChecked, false);
+    expect(moves).toStrictEqual(
+      expect.arrayContaining([
+        { row: 4, column: 'h', isTaken: false },
+        { row: 6, column: 'h', isTaken: false },
+        { row: 4, column: 'g', isTaken: false },
+        { row: 6, column: 'g', isTaken: false },
+        //not allowed: e5, c3 (checked by bishop)
+      ]),
+    );
   });
 });
 
