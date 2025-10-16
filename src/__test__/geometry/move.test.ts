@@ -5,6 +5,7 @@ import {
   calculateMoveListForBishop,
   calculateMoveListForRook,
   calculateMoveListForQueen,
+  calculateMoveListForPiece,
 } from '../../geometry/move.ts';
 import { Fen } from '../../geometry/types.ts';
 import { validFenFrom } from '../../geometry/fen.ts';
@@ -232,7 +233,7 @@ describe('Move generation for bishop', () => {
 });
 
 describe('Move generation for rook', () => {
-  it('generates all the moves and captures for a rook on h1 (capture queen on g1', () => {
+  it('generates all the moves and captures for a rook on h1 (capture queen on g1)', () => {
     const board = createChessBoardFromFen('rn2k2r/1b2bppp/pp2pn2/2p1P1NQ/2P2P2/NP1p2P1/P2P2BP/R1B1K1qR w KQkq - 1 13');
     const moves = calculateMoveListForRook({ column: 'h', row: 1 }, board);
     expect(moves).toEqual([{ row: 1, column: 'g', isTaken: true }]);
@@ -335,6 +336,24 @@ describe('Move generation for queen', () => {
       ]),
     );
   });
+  //all other queen tests are covered by rook and bishop tests
+});
 
+describe('Move generation for king', () => {});
+
+describe('calculates moves for arbitrary peace', () => {
+  it('returns an empty move list if king is checked by pawn', () => {
+    const initPos = validFenFrom('8/8/8/4pP2/3K4/8/6k1/8 w - - 0 1');
+    const board = createChessBoardFromFen(initPos);
+    const movesE1 = calculateMoveListForPiece({ column: 'f', row: 5 }, board);
+    //movelist checked king
+    expect(movesE1).toEqual([]);
+  });
+  it('returns an empty move list if king is checked by knight', () => {
+    const initPos = validFenFrom('8/8/2n1p3/5P2/3K4/8/6k1/8 w - - 0 1');
+    const board = createChessBoardFromFen(initPos);
+    const movesE1 = calculateMoveListForPiece({ column: 'f', row: 5 }, board);
+    expect(movesE1).toEqual([]);
+  });
+  //other tests not necessarily needed, as they are covered by check.test.ts
 }); 
-

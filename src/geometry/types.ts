@@ -20,7 +20,7 @@ export type MoveProperties = {
   isTaken?: boolean;
   isTakenEnPassent?: boolean;
   isPromotion?: boolean;
-  castling?: CastlingLetter;
+  isCastle?: CastlingLetter;
 };
 export type Move = Position & MoveProperties; //extra info for move
 export type Piece = {
