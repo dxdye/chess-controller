@@ -481,6 +481,29 @@ describe('Move generation for king', () => {
     const movesE1 = calculateMoveListForKing({ column: 'e', row: 1 }, board, false, true);
     expect(movesE1).toEqual([{ row: 2, column: 'd', isTaken: false }]); // only move is d2
   }); 
+  it('validate black king-side castle move not possible in position', () => {
+    const board = createChessBoardFromFen('rn1Rk2r/ppB1p1pp/2p1p1n1/8/8/N1Q1P1r1/PP2PPb1/R3K2R w kq - 0 1');
+    const board2 = createChessBoardFromFen('rn1Rk2r/ppB1pPpp/2p1p1n1/8/8/N1Q1P1r1/PP3Pb1/R3K2R w kq - 0 1');
+    const movesE8 = calculateMoveListForKing({ column: 'e', row: 8 }, board, false, true);
+    const movesE82 = calculateMoveListForKing({ column: 'e', row: 8 }, board2, false, true);
+
+    expect(movesE8).toEqual([{ row: 7, column: 'f', isTaken: false }]); //castle not possible
+    expect(movesE82).toEqual([{ row: 7, column: 'f', isTaken: true }]); //castle not possible
+  });
+  it('validate white side castle move not possible in position', () => {
+    const board = createChessBoardFromFen('rn2k2r/ppB1p1pp/2pRpPn1/8/8/N1Q1P1r1/PP3P2/R2K3R w kq - 0 1');
+    const movesE8 = calculateMoveListForKing({ column: 'd', row: 1 }, board, false, true);
+    expect(movesE8).toEqual(
+      expect.arrayContaining([
+        { row: 1, column: 'c', isTaken: false },
+        { row: 2, column: 'c', isTaken: false },
+        { row: 2, column: 'd', isTaken: false },
+        { row: 1, column: 'e', isTaken: false },
+        { row: 2, column: 'e', isTaken: false },
+      ]),
+    ); // only move is d7
+  }); 
+
 });
 
 describe('calculates moves for arbitrary peace', () => {
