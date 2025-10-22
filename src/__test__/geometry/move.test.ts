@@ -476,6 +476,11 @@ describe('Move generation for king', () => {
       { row: 2, column: 'f', isTaken: true },
     ]);
   });
+  it('validate white queen-side castle move not possible in position', () => {
+    const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/8/8/N1Q1P3/PP2PPb1/R3Kr1R w kq - 0 1');
+    const movesE1 = calculateMoveListForKing({ column: 'e', row: 1 }, board, false, true);
+    expect(movesE1).toEqual([{ row: 2, column: 'd', isTaken: false }]); // only move is d2
+  }); 
 });
 
 describe('calculates moves for arbitrary peace', () => {
