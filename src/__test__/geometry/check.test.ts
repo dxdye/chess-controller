@@ -1,5 +1,5 @@
 import { createChessBoardFromFen } from '../../geometry/board.ts';
-import { isKingChecked } from '../../geometry/check.ts';
+import { isKingChecked, isPositionChecked, wouldPositionBeChecked } from '../../geometry/check.ts';
 import { INIT_POSITION } from '../../geometry/constant.ts';
 describe('King is checked', () => {
   it('proves that black king on h8 is checked in bishop direction (by queen and bishop)', () => {
@@ -109,5 +109,13 @@ describe('King is checked', () => {
     const resRP = isKingChecked(boardPawnAndQueen, 'black');
     expect(resRQ).toBe(true);
     expect(resRP).toBe(true);
+  });
+  it('checks position for move.test.ts', () => {
+    //const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/2N5/1R6/2Q5/PPbPPP2/4KB1R w kq - 0 1');
+    const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/8/8/N1Q5/PPbPPP2/R3KB1R w kq - 0 1');
+    const res = wouldPositionBeChecked(board, { row: 1, column: 'd' }, 'white');
+    const res2 = isPositionChecked({ row: 1, column: 'b' }, board, 'white');
+    expect(res).toBe(true);
+    expect(res2).toBe(true);
   });
 });

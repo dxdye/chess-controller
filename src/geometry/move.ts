@@ -216,38 +216,52 @@ export const calculateMoveListForKing = (
 
   const fromColor = extractColorFromMap(boardColorMap, from);
   if (isCastlingPossible && !isKingChecked) {
-    //king side castling
-    if (
-      (fromColor === 'white' &&
+    if (fromColor === 'white') {
+      //white king side castling
+      if (
         isPathEmpty(boardColorMap, { row: 1, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'g' }) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor)) ||
-      (fromColor === 'black' &&
-        isPathEmpty(boardColorMap, { row: 8, column: 'f' }) &&
-        isPathEmpty(boardColorMap, { row: 8, column: 'g' }) &&
-        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'g' }, fromColor))
-    ) {
-      moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: fromColor === 'white' ? 'K' : 'k' });
-    }
-    //queen side castling
-    if (
-      (fromColor === 'white' &&
+        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor)
+      ) {
+        moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: 'K' });
+      }
+      //white queen side castling
+      if (
+        fromColor === 'white' &&
         isPathEmpty(boardColorMap, { row: 1, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'c' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'b' }) &&
-        !wouldPositionBeChecked(board, { row: 1, column: 'd' }, fromColor) &&
-        !wouldPositionBeChecked(board, { row: 1, column: 'c' }, fromColor)) ||
-      (fromColor === 'black' &&
+        !wouldPositionBeChecked(board, { row: 1, column: 'd' }, fromColor) && //not checked on d1
+        !wouldPositionBeChecked(board, { row: 1, column: 'c' }, fromColor) // not checked on c1
+      ) {
+        moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: 'Q' });
+      }
+    }
+
+    if (fromColor === 'black') {
+      //black king side castling
+      if (
+        isPathEmpty(boardColorMap, { row: 8, column: 'f' }) &&
+        isPathEmpty(boardColorMap, { row: 8, column: 'g' }) &&
+        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'f' }, fromColor) &&
+        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'g' }, fromColor)
+      ) {
+        moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: 'k' });
+      }
+      //black queen side castling
+      if (
+        fromColor === 'black' &&
         isPathEmpty(boardColorMap, { row: 8, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'c' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'b' }) &&
-        !wouldPositionBeChecked(board, { row: 8, column: 'd' }, fromColor) &&
-        !wouldPositionBeChecked(board, { row: 8, column: 'c' }, fromColor))
-    ) {
-      moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: fromColor === 'white' ? 'Q' : 'q' });
+        !wouldPositionBeChecked(board, { row: 8, column: 'd' }, fromColor) && // would not checked on d8
+        !wouldPositionBeChecked(board, { row: 8, column: 'c' }, fromColor) // would not checked on c8
+      ) {
+        moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: 'q' });
+      }
     }
+    //don't act if fromColor is none
   }
 
   return moves;

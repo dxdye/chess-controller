@@ -62,7 +62,8 @@ const checkDirectionForCheck = (
             }
 
             if (piece.color === color) {
-              return false;
+              //not necessarly blocked by own piece
+              break;
             }
             break; //blocked by own piece or opponent piece
           }
@@ -75,8 +76,20 @@ const checkDirectionForCheck = (
   return false;
 };
 
-export const isPositionChecked = (kingPosition: Position, board: Board, color: Color) => {
-  const pieceMap = boardToPieceMap(board);
+export const isPositionChecked = (kingPosition: Position, board: Board, kingColor: Color) => {
+  const color = kingColor; //the color of the king we are checking
+
+  const pieceMap = boardToPieceMap(board).map((row) =>
+    row.map((piece) => {
+      // Remove the king of the same color from the pieceMap
+      // own king should not block checks
+      if (piece?.figure === 'KING' && piece.color === color) {
+        return null;
+      }
+      return piece;
+    }),
+  );
+
   if (isNil(kingPosition)) {
     throw new Error('King not found on the board');
   } else {
