@@ -110,12 +110,20 @@ describe('King is checked', () => {
     expect(resRQ).toBe(true);
     expect(resRP).toBe(true);
   });
-  it('checks position for move.test.ts', () => {
-    //const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/2N5/1R6/2Q5/PPbPPP2/4KB1R w kq - 0 1');
+  it('validates check for specific position', () => {
     const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/8/8/N1Q5/PPbPPP2/R3KB1R w kq - 0 1');
-    const res = wouldPositionBeChecked(board, { row: 1, column: 'd' }, 'white');
+    const res = isPositionChecked({ row: 1, column: 'd' }, board, 'white');
     const res2 = isPositionChecked({ row: 1, column: 'b' }, board, 'white');
     expect(res).toBe(true);
     expect(res2).toBe(true);
   });
+  it('validates check from behind', () => {
+    const board = createChessBoardFromFen('rn1qk2r/pppppppp/6n1/8/8/N1Q1P3/PP2PPb1/R3Kr1R w kq - 0 1');
+    const res = isKingChecked(board, 'white');
+    const resPos = isPositionChecked({ row: 1, column: 'd' }, board, 'white');
+    const resPos2 = isPositionChecked({ row: 2, column: 'd' }, board, 'white');
+    expect(res).toBe(true);
+    expect(resPos).toBe(true);
+    expect(resPos2).toBe(false);
+  }); 
 });
