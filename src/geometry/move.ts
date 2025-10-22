@@ -217,8 +217,10 @@ export const calculateMoveListForKing = (
   const fromColor = extractColorFromMap(boardColorMap, from);
   if (isCastlingPossible && !isKingChecked) {
     if (fromColor === 'white') {
+      const isCorrectPosition = from.row === 1 && from.column === 'e';
       //white king side castling
       if (
+        isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 1, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'g' }) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'f' }, fromColor) &&
@@ -228,6 +230,7 @@ export const calculateMoveListForKing = (
       }
       //white queen side castling
       if (
+        isCorrectPosition &&
         fromColor === 'white' &&
         isPathEmpty(boardColorMap, { row: 1, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'c' }) &&
@@ -240,8 +243,10 @@ export const calculateMoveListForKing = (
     }
 
     if (fromColor === 'black') {
+      const isCorrectPosition = from.row === 8 && from.column === 'e';
       //black king side castling
       if (
+        isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 8, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'g' }) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'f' }, fromColor) &&
@@ -251,7 +256,7 @@ export const calculateMoveListForKing = (
       }
       //black queen side castling
       if (
-        fromColor === 'black' &&
+        isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 8, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'c' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'b' }) &&
