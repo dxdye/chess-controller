@@ -1,10 +1,19 @@
 import { isKingChecked, wouldPositionBeChecked } from './check.ts';
-import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn } from './types.ts';
+import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn, CastlingLetter } from './types.ts';
 import { positionToCoordinate, boardToColorMap, boardToPieceMap, boardPieceMapToColorMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';
 import { match } from 'ts-pattern';
 import { BLACK_EN_PASSENT_ROW, SECOND_ROW, SEVENTH_ROW, WHITE_EN_PASSENT_ROW } from './constant.ts';
+
+const includesCastlingRight = (castlingRights: CastlingLetter[], targetRight: CastlingLetter): boolean => {
+  return castlingRights.includes(targetRight);
+};
+
+const isPieceRook = (board: Board, position: Position, color: Color): boolean => {
+  const piece = board.find((square) => square.row === position.row && square.column === position.column);
+  return piece?.figure === 'ROOK' && piece?.color === color;
+};
 
 const extractColorFromMap = (boardColorMap: BoardColorMap, target: Position): Color => {
   const targetCoord = positionToCoordinate(target);
@@ -30,13 +39,6 @@ const isPawnCaptureBlocked = (boardToColorMap: BoardColorMap, target: Position, 
 
 const isPathEmpty = (boardToColorMap: BoardColorMap, target: Position) =>
   isPathBlocked(boardToColorMap, target, 'none');
-
-// const isKingHit = (boardPieceMap: BoardPieceMap, target: Position) => {
-//   const targetCoord = positionToCoordinate(target); //caution forward and backward conversion
-//   const piece = boardPieceMap.at(targetCoord[0] - 1)?.at(targetCoord[1] - 1);
-//   if (isNil(piece)) return false;
-//   return piece?.figure === 'KING';
-// };
 
 const moveDirection = (directions: readonly Direction[], from: Position, moves: Move[], board: Board): Move[] => {
   //crawl in given directions until path is blocked or out of bounds
@@ -156,13 +158,11 @@ export const calculateMoveListForQueen = (from: Position, board: Board): Move[] 
   return moveDirection(directions, from, moves, board);
 };
 
-
-
 export const calculateMoveListForKing = (
   from: Position,
   board: Board,
   isKingChecked: boolean,
-  isCastlingPossible: boolean = false, //king or rook hasn't moved yet
+  castlingRights: CastlingLetter[] = [], //castling rights are evaluated by game
 ): Move[] => {
   const moves: Move[] = [];
   const current = positionToCoordinate(from);
@@ -214,29 +214,35 @@ export const calculateMoveListForKing = (
   //king isn't in check before or while castling
   //king wouldn't be in check after castling (also the square the king passes over)
 
+  //check whether rook exists on is checked
+
   const fromColor = extractColorFromMap(boardColorMap, from);
-  if (isCastlingPossible && !isKingChecked) {
+  if (!isKingChecked) {
     if (fromColor === 'white') {
       const isCorrectPosition = from.row === 1 && from.column === 'e';
       //white king side castling
       if (
+        includesCastlingRight(castlingRights, 'K') &&
         isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 1, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'g' }) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor)
+        !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor) &&
+        isPieceRook(board, { row: 1, column: 'h' }, fromColor)
       ) {
         moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: 'K' });
       }
       //white queen side castling
       if (
+        includesCastlingRight(castlingRights, 'Q') &&
         isCorrectPosition &&
         fromColor === 'white' &&
         isPathEmpty(boardColorMap, { row: 1, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'c' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'b' }) &&
         !wouldPositionBeChecked(board, { row: 1, column: 'd' }, fromColor) && //not checked on d1
-        !wouldPositionBeChecked(board, { row: 1, column: 'c' }, fromColor) // not checked on c1
+        !wouldPositionBeChecked(board, { row: 1, column: 'c' }, fromColor) && // not checked on c1
+        isPieceRook(board, { row: 1, column: 'a' }, fromColor)
       ) {
         moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: 'Q' });
       }
@@ -246,22 +252,26 @@ export const calculateMoveListForKing = (
       const isCorrectPosition = from.row === 8 && from.column === 'e';
       //black king side castling
       if (
+        includesCastlingRight(castlingRights, 'k') &&
         isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 8, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'g' }) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'f' }, fromColor) &&
-        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'g' }, fromColor)
+        !wouldPositionBeChecked(boardWithoutKing, { row: 8, column: 'g' }, fromColor) &&
+        isPieceRook(board, { row: 8, column: 'h' }, fromColor)
       ) {
         moves.push({ row: from.row, column: 'g', isTaken: false, isCastle: 'k' });
       }
       //black queen side castling
       if (
+        includesCastlingRight(castlingRights, 'q') &&
         isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 8, column: 'd' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'c' }) &&
         isPathEmpty(boardColorMap, { row: 8, column: 'b' }) &&
         !wouldPositionBeChecked(board, { row: 8, column: 'd' }, fromColor) && // would not checked on d8
-        !wouldPositionBeChecked(board, { row: 8, column: 'c' }, fromColor) // would not checked on c8
+        !wouldPositionBeChecked(board, { row: 8, column: 'c' }, fromColor) && // would not checked on c8
+        isPieceRook(board, { row: 8, column: 'a' }, fromColor)
       ) {
         moves.push({ row: from.row, column: 'c', isTaken: false, isCastle: 'q' });
       }
@@ -365,7 +375,7 @@ export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
   hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // is true if pawn was moved two squares in the last move
-  isCastlingPossible: boolean = false,
+  castlingRights: CastlingLetter[] = [],
 ): Move[] => {
   const piece = board.find((square) => square.row === from.row && square.column === from.column);
   if (isNil(piece)) {
@@ -378,7 +388,7 @@ export const calculateMoveListForPiece = (
   }
 
   return match(piece?.figure)
-    .with('KING', () => calculateMoveListForKing(from, board, kingIsChecked, isCastlingPossible))
+    .with('KING', () => calculateMoveListForKing(from, board, kingIsChecked, castlingRights))
     .with('BISHOP', () => calculateMoveListForBishop(from, board))
     .with('KNIGHT', () => calculateMoveListForKnight(from, board))
     .with('ROOK', () => calculateMoveListForRook(from, board))

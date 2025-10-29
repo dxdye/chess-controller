@@ -9,7 +9,8 @@ export type FigureLetter = (typeof FigureLetters)[number];
 export type EnPassentColumn = Column | '-';
 export type CastlingLetter = (typeof CastlingLetters)[number] | '-';
 
-export type Color = 'white' | 'black' | 'none';
+export type StrictColor = 'white' | 'black';
+export type Color = StrictColor | 'none';
 export type Figure = 'PAWN' | 'KNIGHT' | 'BISHOP' | 'ROOK' | 'KING' | 'QUEEN';
 
 export type Position = {
@@ -23,6 +24,14 @@ export type MoveProperties = {
   isCastle?: CastlingLetter;
 };
 export type Move = Position & MoveProperties; //extra info for move
+export type MoveConfirmation =
+  | ({
+      from: Position;
+      to: Position;
+      promotionTo?: Figure;
+    } & MoveProperties)
+  | 'MOVE_INVALID';
+
 export type Piece = {
   color: Color;
   figure: Figure;
@@ -40,20 +49,3 @@ export type Direction = { row: CX; col: CY };
 
 export type Pgn = string[]; //e4 e5 Nf3 Nc6 Bb5 a6 ...
 export type Fen = string; //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 // should be called Fen
-
-export type Game = {
-  id: string;
-  history: Fen[];
-  turn: Color;
-
-  lastMoveTwoPawnStep: boolean; //will be used for en passant at pawn move
-
-  //might not be needed
-  whiteKingSideCastle: boolean;
-  whiteQueenSideCastle: boolean;
-  blackKingSideCastle: boolean;
-  blackQueenSideCastle: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
-};
