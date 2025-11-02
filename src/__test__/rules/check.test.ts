@@ -1,6 +1,6 @@
-import { createChessBoardFromFen } from '../../geometry/board.ts';
-import { isKingChecked, isPositionChecked, wouldPositionBeChecked } from '../../geometry/check.ts';
-import { INIT_POSITION } from '../../geometry/constant.ts';
+import { createChessBoardFromFen } from '../../rules/board.ts';
+import { isKingChecked, isPositionChecked } from '../../rules/check.ts';
+import { INIT_POSITION } from '../../rules/constant.ts';
 describe('King is checked', () => {
   it('proves that black king on h8 is checked in bishop direction (by queen and bishop)', () => {
     const boardBishop = createChessBoardFromFen('7k/8/8/8/3B4/8/5K2/8 w - - 0 1');
@@ -125,5 +125,5 @@ describe('King is checked', () => {
     expect(res).toBe(true);
     expect(resPos).toBe(true);
     expect(resPos2).toBe(false);
-  }); 
+  });
 });
