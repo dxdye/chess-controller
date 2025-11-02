@@ -9,21 +9,30 @@
 
 import { createChessBoardFromFen } from "./board.ts";
 import { BOTH_CAN_CASTLE, INIT_POSITION } from "./constant.ts";
-import { Board, CastlingLetter, EnPassentColumn, Fen, MoveConfirmation, Position, StrictColor } from "./types.ts";
-import { calculateMoveListForPiece } from "./move.ts";
+import {
+  Board,
+  CastlingLetter,
+  EnPassentColumn,
+  Fen,
+  MoveConfirmation,
+  Piece,
+  Position,
+  StrictColor,
+} from './types.ts';
+import { calculateMoveListForPiece } from './move.ts';
 
 export class Game {
   turn: StrictColor;
-  castlingRights: CastlingLetter[]; 
+  castlingRights: CastlingLetter[];
   enPassantTarget: string | null;
   halfmoveClock: number;
   fullmoveNumber: number;
   history: Fen[] = [];
-  board: Board; 
-  enPassentMoveColumn:EnPassentColumn = '-';
+  board: Board;
+  enPassentMoveColumn: EnPassentColumn = '-';
 
   constructor() {
-    this.board = createChessBoardFromFen(INIT_POSITION); 
+    this.board = createChessBoardFromFen(INIT_POSITION);
     this.turn = 'white';
     this.castlingRights = BOTH_CAN_CASTLE;
     this.enPassantTarget = null;
@@ -34,24 +43,66 @@ export class Game {
     this.board = createChessBoardFromFen(fen);
   }
 
-  move(from: Position, to: Position): MoveConfirmation{
-    //is turn valid 
-    const piece = this.board.find(
-      (sq) => sq.row === from.row && sq.column === from.column
-    );
+  //to Fen
+  //to Pgn
+  //delete Peace from board & set piece to position
+  //rewind position
+
+  move(from: Position, to: Position): MoveConfirmation {
+    //is turn valid
+    const piece = this.board.find((sq) => sq.row === from.row && sq.column === from.column);
     if (!piece || piece.color !== this.turn) {
-      return 'MOVE_INVALID'; 
+      return 'MOVE_INVALID';
     }
 
-    //is to in move list 
+    //is to in move list
     const possibleMoves = calculateMoveListForPiece(from, this.board, this.enPassentMoveColumn, this.castlingRights);
-    const validMove = possibleMoves.find(
-      (mv) => mv.row === to.row && mv.column === to.column
-    );
-
+    const validMove = possibleMoves.find((mv) => mv.row === to.row && mv.column === to.column);
 
     //make move
 
-    return 'MOVE_INVALID'; 
+    //add move to history
+
+    return 'MOVE_INVALID';
+  }
+
+  setCastlingRightsAfterMove(piece: Piece, from: Position) {
+    if (piece.figure === 'KING') {
+      if (piece.color === 'white') {
+        this.castlingRights = this.castlingRights.filter((cr) => cr !== 'K' && cr !== 'Q');
+      } else {
+        this.castlingRights = this.castlingRights.filter((cr) => cr !== 'k' && cr !== 'q');
+      }
+    } else if (piece.figure === 'ROOK') {
+      if (piece.color === 'white') {
+        if (from.column === 'a' && from.row === 1) {
+          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'Q');
+        } else if (from.column === 'h' && from.row === 1) {
+          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'K');
+        }
+      } else {
+        if (from.column === 'a' && from.row === 8) {
+          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'q');
+        } else if (from.column === 'h' && from.row === 8) {
+          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'k');
+        }
+      }
+    }
+  }
+
+  currentGameToFen(): Fen {
+    //not implemented yet
+    return INIT_POSITION;
+  }
+
+  //rollback x halfmoves
+  rollback(halfmoves: number) {
+    for (let i = 0; i < halfmoves; i++) {
+      if (this.history.length === 0) break;
+      const lastFen = this.history.pop()!;
+      this.setPositionToFen(lastFen);
+      //update turn, castling rights, en passant target, clocks based on fen parsing
+      //not implemented yet
+    }
   }
 };
