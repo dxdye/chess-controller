@@ -1,6 +1,6 @@
-import { Board, BoardPieceMap, Fen } from '../../geometry/types.ts';
-import { boardToColorMap, boardToPieceMap, createChessBoardFromFen } from '../../geometry/board.ts';
-import { INIT_POSITION } from '../../geometry/constant.ts';
+import { Board, BoardPieceMap, Fen } from '../../rules/types.ts';
+import { boardToColorMap, boardToPieceMap, createChessBoardFromFen } from '../../rules/board.ts';
+import { INIT_POSITION } from '../../rules/constant.ts';
 
 describe('Chess board creation from FEN', () => {
   it('creates the correct board from the initial position FEN', () => {

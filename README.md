@@ -6,7 +6,7 @@ Chess controller is my approach to implement a web app to play some chess!
 
 ### It impements:
 
-- a geometry/rules set and FEN parsing/ translation
+- a rules set and FEN parsing/ translation
 - uci via stockfish.wasm to calculate moves
 
 ### Components are:

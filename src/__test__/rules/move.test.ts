@@ -1,4 +1,4 @@
-import { INIT_POSITION, BOTH_CAN_CASTLE, NO_CASTLING } from '../../geometry/constant.ts';
+import { INIT_POSITION, BOTH_CAN_CASTLE, NO_CASTLING } from '../../rules/constant.ts';
 import {
   calculateMoveListForPawn,
   calculateMoveListForKnight,
@@ -7,11 +7,11 @@ import {
   calculateMoveListForQueen,
   calculateMoveListForPiece,
   calculateMoveListForKing,
-} from '../../geometry/move.ts';
-import { Fen } from '../../geometry/types.ts';
-import { validFenFrom } from '../../geometry/fen.ts';
-import { createChessBoardFromFen } from '../../geometry/board.ts';
-import { isKingChecked } from '../../geometry/check.ts';
+} from '../../rules/move.ts';
+import { Fen } from '../../rules/types.ts';
+import { validFenFrom } from '../../rules/fen.ts';
+import { createChessBoardFromFen } from '../../rules/board.ts';
+import { isKingChecked } from '../../rules/check.ts';
 
 describe('Move generation for pawn', () => {
   it('generates all the moves for an e2, a2, h2 pawn in init position', () => {
