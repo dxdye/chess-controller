@@ -1,6 +1,6 @@
 import { INIT_POSITION } from './constant.ts';
 import { isNil } from './helper.ts';
-import { Fen, Board } from './types.ts';
+import { Fen, Board, Color } from './types.ts';
 import { figureToLetter } from './transform.ts';
 
 const validFen =
@@ -52,6 +52,37 @@ export const isValidFen = (position: Fen): boolean => isValidFenSyntax(position)
 
 export const extractPiecePlacementFromFen = (position: Fen) => {
   return position.split(' ').at(0) ?? '';
+};
+
+export const extractActiveColorFromFen = (position: Fen): Color => {
+  const parts = position.split(' ');
+  if (parts.length < 2) throw new Error('Invalid Fen string: no denoted active color');
+  const activeColorPart = parts[1];
+  return activeColorPart === 'w' ? 'white' : 'black';
+};
+export const extractCastlingRightsFromFen = (position: Fen): string => {
+  const parts = position.split(' ');
+  if (parts.length < 3) throw new Error('Invalid Fen string: no denoted castling rights');
+  const castlingPart = parts[2];
+  return castlingPart ?? '';
+};
+export const extractEnPassentTargetFromFen = (position: Fen): string => {
+  const parts = position.split(' ');
+  if (parts.length < 4) throw new Error('Invalid Fen string: no denoted en passent target');
+  const enPassentPart = parts[3];
+  return enPassentPart ?? '';
+};
+export const extractHalfmoveClockFromFen = (position: Fen): number => {
+  const parts = position.split(' ');
+  if (parts.length < 5) throw new Error('Invalid Fen string: no denoted halfmove clock');
+  const halfmovePart = parts[4];
+  return parseInt(halfmovePart ?? '0', 10);
+};
+export const extractMoveCountFromFen = (position: Fen): number => {
+  const parts = position.split(' ');
+  if (parts.length < 6) throw new Error('Invalid Fen string: no denoted move count');
+  const moveCountPart = parts[5];
+  return parseInt(moveCountPart ?? '1', 10);
 };
 
 export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;
