@@ -21,6 +21,36 @@ import {
 } from './types.ts';
 import { calculateMoveListForPiece } from './move.ts';
 
+const castlingRightsActions = {
+  //remove castling rights after king or rook move
+  KING: {
+    white: (castlingRights: CastlingLetter[]) => castlingRights.filter((cr) => cr !== 'K' && cr !== 'Q'),
+    black: (castlingRights: CastlingLetter[]) => castlingRights.filter((cr) => cr !== 'k' && cr !== 'q'),
+  },
+  ROOK: {
+    white: (castlingRights: CastlingLetter[]) => {
+      return (from: Position) => {
+        if (from.column === 'a' && from.row === 1) {
+          return castlingRights.filter((cr) => cr !== 'Q');
+        } else if (from.column === 'h' && from.row === 1) {
+          return castlingRights.filter((cr) => cr !== 'K');
+        }
+        return castlingRights;
+      };
+    },
+    black: (castlingRights: CastlingLetter[]) => {
+      return (from: Position) => {
+        if (from.column === 'a' && from.row === 8) {
+          return castlingRights.filter((cr) => cr !== 'q');
+        } else if (from.column === 'h' && from.row === 8) {
+          return castlingRights.filter((cr) => cr !== 'k');
+        }
+        return castlingRights;
+      };
+    },
+  },
+} as const;
+
 export class Game {
   turn: StrictColor;
   castlingRights: CastlingLetter[];
@@ -67,26 +97,11 @@ export class Game {
   }
 
   setCastlingRightsAfterMove(piece: Piece, from: Position) {
+    const strictColor = piece.color as StrictColor;
     if (piece.figure === 'KING') {
-      if (piece.color === 'white') {
-        this.castlingRights = this.castlingRights.filter((cr) => cr !== 'K' && cr !== 'Q');
-      } else {
-        this.castlingRights = this.castlingRights.filter((cr) => cr !== 'k' && cr !== 'q');
-      }
+      this.castlingRights = castlingRightsActions.KING[strictColor](this.castlingRights);
     } else if (piece.figure === 'ROOK') {
-      if (piece.color === 'white') {
-        if (from.column === 'a' && from.row === 1) {
-          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'Q');
-        } else if (from.column === 'h' && from.row === 1) {
-          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'K');
-        }
-      } else {
-        if (from.column === 'a' && from.row === 8) {
-          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'q');
-        } else if (from.column === 'h' && from.row === 8) {
-          this.castlingRights = this.castlingRights.filter((cr) => cr !== 'k');
-        }
-      }
+      this.castlingRights = castlingRightsActions.ROOK[strictColor](this.castlingRights)(from);
     }
   }
 

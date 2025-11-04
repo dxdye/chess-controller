@@ -23,7 +23,8 @@ export type MoveProperties = {
   isPromotion?: boolean;
   isCastle?: CastlingLetter;
 };
-export type Move = Position & MoveProperties; //extra info for move
+export type DestMove = Position & MoveProperties; //extra info for move
+export type Move = DestMove & Square; //move with source position
 export type MoveConfirmation =
   | ({
       from: Position;
@@ -49,3 +50,12 @@ export type Direction = { row: CX; col: CY };
 
 export type Pgn = string[]; //e4 e5 Nf3 Nc6 Bb5 a6 ...
 export type Fen = string; //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 // should be called Fen
+
+export type PgnSymbols = {
+  KING: string;
+  QUEEN: string;
+  ROOK: string;
+  BISHOP: string;
+  KNIGHT: string;
+  PAWN: string;
+};

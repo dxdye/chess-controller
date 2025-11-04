@@ -1,5 +1,14 @@
 import { isKingChecked, wouldPositionBeChecked } from './check.ts';
-import { Board, Position, Move, BoardColorMap, Color, Direction, EnPassentColumn, CastlingLetter } from './types.ts';
+import {
+  Board,
+  Position,
+  DestMove as Move,
+  BoardColorMap,
+  Color,
+  Direction,
+  EnPassentColumn,
+  CastlingLetter,
+} from './types.ts';
 import { positionToCoordinate, boardToColorMap, boardToPieceMap, boardPieceMapToColorMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';

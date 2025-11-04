@@ -11,3 +11,21 @@ export const BOTH_CAN_CASTLE: CastlingLetter[] = ['K', 'Q', 'k', 'q'];
 export const WHITE_CAN_CASTLE: CastlingLetter[] = ['K', 'Q'];
 export const BLACK_CAN_CASTLE: CastlingLetter[] = ['k', 'q'];
 export const NO_CASTLING: CastlingLetter[] = [];
+
+export const PgnMoveSymolsEnglish = {
+  KING: 'K',
+  QUEEN: 'Q',
+  ROOK: 'R',
+  BISHOP: 'B',
+  KNIGHT: 'N',
+  PAWN: 'P',
+};
+
+export const PgnMoveSymolsGerman = {
+  KING: 'K',
+  QUEEN: 'D',
+  ROOK: 'T',
+  BISHOP: 'L',
+  KNIGHT: 'S',
+  PAWN: 'B',
+};
