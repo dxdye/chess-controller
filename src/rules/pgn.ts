@@ -27,7 +27,7 @@ const moveToPgn = (
       (acc, curr) =>
         acc || doesMoveListOverlap(calculateMoveListForPiece(move, board, enPassentColumn, castlingRights), curr),
       false,
-    );,
+    );
   const pieceChar = move.isTaken ? takeSymbol : '-';
   return `${move.row}${pieceChar}${move.column}`;
 };
