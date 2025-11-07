@@ -120,4 +120,10 @@ export class Game {
       //not implemented yet
     }
   }
+
+  addCastlingRight(casltingRight: CastlingLetter) {
+    if (!this.castlingRights.includes(casltingRight)) {
+      this.castlingRights.push(casltingRight);
+    }
+  }
 };

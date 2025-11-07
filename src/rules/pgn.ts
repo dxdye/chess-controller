@@ -8,6 +8,9 @@ const doesMirrorPieceExist = (piece: Piece, board: Board): boolean =>
 const doesMoveListOverlap = (moveOfPiece: DestMove[], moveOfMirrorPiece: DestMove[]): boolean =>
   moveOfPiece.some((m) => moveOfMirrorPiece.some((l) => m.row === l.row && m.column === l.column));
 
+
+
+
 //move list of other piece shouldn't overlap
 const moveToPgn = (
   move: Move,
@@ -20,7 +23,7 @@ const moveToPgn = (
     // there could be actually multiple mirror pieces (pieces of same type and color)
     (sq) =>
       !(sq.figure === move.figure && sq.color === move.color && !(sq.row === move.row && sq.column === move.column)),
-  );
+  ); //add self to list to simplify logic
   const moveListsOverlap = mirrorPieces
     .map((mp) => calculateMoveListForPiece(mp, board, enPassentColumn, castlingRights))
     .reduce(
@@ -29,5 +32,16 @@ const moveToPgn = (
       false,
     );
   const pieceChar = move.isTaken ? takeSymbol : '-';
-  return `${move.row}${pieceChar}${move.column}`;
+  if (pieceChar === '-' && !moveListsOverlap) {
+    return `${move.row}${move.column}`;
+  }
+
+  const dest = `${move.row}${move.column}`;
+  /*
+   * ROOK or QUEEN on same row only the column is needed
+   * ROOK or QUEEN on same column only row the is needed
+   * KNIGHT needs both row and column (if moveList does not overlap)
+   * BISHOP and Queen on same diagonal need both row and column (if unambiguous)
+   * */
+  return '';
 };
