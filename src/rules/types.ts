@@ -11,7 +11,8 @@ export type CastlingLetter = (typeof CastlingLetters)[number] | '-';
 
 export type StrictColor = 'white' | 'black';
 export type Color = StrictColor | 'none';
-export type Figure = 'PAWN' | 'KNIGHT' | 'BISHOP' | 'ROOK' | 'KING' | 'QUEEN';
+export type PromotionFigure = 'KNIGHT' | 'BISHOP' | 'ROOK' | 'QUEEN';
+export type Figure = 'KING' | 'PAWN' | PromotionFigure;
 
 export type Position = {
   row: Row;
@@ -37,6 +38,9 @@ export type Piece = {
   color: Color;
   figure: Figure;
 };
+
+//strict color redundant, because only pawns can be only  promoted in the backrank of the opposite color
+export type Promotion = Position & { promotionTo: PromotionFigure } & StrictColor; 
 
 export type Square = Position & Piece;
 export type Board = Square[];

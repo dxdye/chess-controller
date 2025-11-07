@@ -4,10 +4,13 @@
 
 Chess controller is my approach to implement a web app to play some chess!
 
-### It impements:
+### It implements:
 
-- a rules set and FEN parsing/ translation
-- uci via stockfish.wasm to calculate moves
+- PGN & SAN and other specifications in 
+    http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm
+    and https://www.chessprogramming.org/Algebraic_Chess_Notation
+- a rule set and FEN parsing/ translation
+- UCI via stockfish.wasm to calculate moves
 
 ### Components are:
 
