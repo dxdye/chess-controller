@@ -1,5 +1,8 @@
+import { match } from 'ts-pattern';
 import { calculateMoveListForPiece } from './move.ts';
-import { Board, CastlingLetter, EnPassentColumn, Move, Piece, DestMove } from './types.ts';
+import { Board, CastlingLetter, EnPassentColumn, Move, Piece, DestMove, Position } from './types.ts';
+
+const buildFinalPgnString = (values: string[]) => values.filter((v) => v.length > 0).join('');
 
 //move list calculation is expensive, so if mirror piece does not exist, we skip move list calculation
 const doesMirrorPieceExist = (piece: Piece, board: Board): boolean =>
@@ -8,35 +11,60 @@ const doesMirrorPieceExist = (piece: Piece, board: Board): boolean =>
 const doesMoveListOverlap = (moveOfPiece: DestMove[], moveOfMirrorPiece: DestMove[]): boolean =>
   moveOfPiece.some((m) => moveOfMirrorPiece.some((l) => m.row === l.row && m.column === l.column));
 
+const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x') => {
+  const pgnMove: string[] = ['R'];
+  // there could be actually multiple pieces of same kind (pieces of same type and color)
+  const otherRooks = board.filter(
+    (sq) =>
+      !(sq.figure === move.figure && sq.color === move.color && !(sq.row === move.row && sq.column === move.column)),
+  );
 
+  // same move in move list from other rook
+  const rooksWithSameMove = otherRooks.filter((rook) => {
+    const rookMoveList = calculateMoveListForPiece(rook, board);
+    return rookMoveList.includes(move);
+  });
 
+  const rooksWithSameMoveExist = rooksWithSameMove.length > 0;
+  if (rooksWithSameMoveExist) {
+    // no other rook can move to the same square
+    const hasSameRow = rooksWithSameMove.some((rook) => rook.row === move.row);
+    const hasSameColumn = rooksWithSameMove.some((rook) => rook.column === move.column);
+
+    if (hasSameRow && !hasSameColumn) {
+      // has same row to some other rook
+      pgnMove.push(`${curr.column}`);
+    } else if (!hasSameRow && hasSameColumn) {
+      // has same column to some other rook
+      pgnMove.push(`${curr.row}`);
+    } else {
+      // has same row to some other rook
+      // has same column to some other rook
+      pgnMove.push(`${curr.row}${curr.column}`);
+    }
+  }
+  if (move.isTaken) {
+    pgnMove.push(takeSymbol);
+  }
+  pgnMove.push(`${move.row}${move.column}`);
+  return buildFinalPgnString(pgnMove);
+};
 
 //move list of other piece shouldn't overlap
 const moveToPgn = (
+  current: Position,
   move: Move,
   board: Board,
   enPassentColumn: EnPassentColumn,
   castlingRights: CastlingLetter[],
   takeSymbol: string = 'x',
 ): string => {
-  const mirrorPieces = board.filter(
-    // there could be actually multiple mirror pieces (pieces of same type and color)
-    (sq) =>
-      !(sq.figure === move.figure && sq.color === move.color && !(sq.row === move.row && sq.column === move.column)),
-  ); //add self to list to simplify logic
-  const moveListsOverlap = mirrorPieces
-    .map((mp) => calculateMoveListForPiece(mp, board, enPassentColumn, castlingRights))
-    .reduce(
-      (acc, curr) =>
-        acc || doesMoveListOverlap(calculateMoveListForPiece(move, board, enPassentColumn, castlingRights), curr),
-      false,
-    );
-  const pieceChar = move.isTaken ? takeSymbol : '-';
-  if (pieceChar === '-' && !moveListsOverlap) {
-    return `${move.row}${move.column}`;
-  }
+  match(move.figure)
+    .with('ROOK', () => buildRookMovePgn(current, move, board, takeSymbol))
+    .otherwise(() => {
+      throw new Error(`moveToPgn not implemented for figure ${move.figure}`);
+    });
 
-  const dest = `${move.row}${move.column}`;
   /*
    * ROOK or QUEEN on same row only the column is needed
    * ROOK or QUEEN on same column only row the is needed
