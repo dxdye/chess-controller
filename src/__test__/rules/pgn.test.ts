@@ -16,7 +16,7 @@ describe('regex match for Pgn module', () => {
     const pgn = moveToPgn(current, move, board, '-', []);
     expect(pgn).toBe('Rad1');
   });
-  it.skip('builds correct SAN for rook move without take and no overlap', () => {
+  it('builds correct SAN for rook move without take and no overlap', () => {
     const board: Board = createChessBoardFromFen('2r1k1r1/8/8/8/2R5/5K2/8/R3b2R w - - 0 1');
     const move: Move = {
       row: 1,
