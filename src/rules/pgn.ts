@@ -1,7 +1,14 @@
 import { match } from 'ts-pattern';
 import { calculateMoveListForPiece } from './move.ts';
-import { Board, Move, Position } from './types.ts';
+import { Board, Color, Move, Position } from './types.ts';
 import { isCheckMate, isKingChecked } from './check.ts';
+import { makeMoveOnBoard } from './game.ts';
+
+const oppositeColor = (color: Color): Color => {
+  if (color === 'white') return 'black';
+  if (color === 'black') return 'white';
+  return 'none';
+};
 
 const buildFinalPgnString = (values: string[]) => values.filter((v) => v.length > 0).join('');
 
@@ -135,21 +142,28 @@ const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol:
   return buildFinalPgnString(sanMove);
 };
 
-const buildKingMoveSan = (move: Move, takeSymbol: string = 'x'): string => {
-  const sanMove: string[] = ['K'];
-  if (move.isCastle) {
-    if (move.column === 'g') {
+const buildKingMoveSan = (move: Move, takeSymbol: string = 'x'): string =>
+  match(move.isCastle)
+    .with('K', () => {
       return 'O-O';
-    } else if (move.column === 'c') {
+    })
+    .with('k', () => {
+      return 'O-O';
+    })
+    .with('Q', () => {
       return 'O-O-O';
-    }
-  }
-  if (move.isTaken) {
-    sanMove.push(takeSymbol);
-  }
-  sanMove.push(`${move.column}${move.row}`);
-  return buildFinalPgnString(sanMove);
-};
+    })
+    .with('q', () => {
+      return 'O-O-O';
+    })
+    .otherwise(() => {
+      const sanMove: string[] = ['K'];
+      if (move.isTaken) {
+        sanMove.push(takeSymbol);
+      }
+      sanMove.push(`${move.column}${move.row}`);
+      return buildFinalPgnString(sanMove);
+    });
 
 const buildPawnMoveSan = (curr: Position, move: Move, takeSymbol: string = 'x'): string => {
   const sanMove: string[] = [];
@@ -171,19 +185,23 @@ export const moveToSanInner = (current: Position, move: Move, board: Board, take
     .with('KING', () => buildKingMoveSan(move, takeSymbol))
     .exhaustive();
 
+/*
+ * ROOK or QUEEN on same row only the column is needed
+ * ROOK or QUEEN on same column only row the is needed
+ * KNIGHT needs both row and column (if moveList does not overlap)
+ * BISHOP and Queen on same diagonal need both row and column (if ambiguous)
+ * normally 3 queens needed
+ * */
+
 export const moveToSan = (current: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
-  if (isCheckMate(board, move.color)) {
+  const boardAfterMove = makeMoveOnBoard(current, move, board);
+  if (isCheckMate(boardAfterMove, oppositeColor(move.color))) {
     return moveToSanInner(current, move, board, takeSymbol) + '#';
-  } else if (isKingChecked(board, move.color)) {
+  } else if (isKingChecked(boardAfterMove, oppositeColor(move.color))) {
+    // is king checked and checkmate check are redundant
+    // maybe optimize later
     return moveToSanInner(current, move, board, takeSymbol) + '+';
   }
   return moveToSanInner(current, move, board, takeSymbol);
 };
 
-  /*
-   * ROOK or QUEEN on same row only the column is needed
-   * ROOK or QUEEN on same column only row the is needed
-   * KNIGHT needs both row and column (if moveList does not overlap)
-   * BISHOP and Queen on same diagonal need both row and column (if ambiguous) 
-   * normally 3 queens needed
-   * */

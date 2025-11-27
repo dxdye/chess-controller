@@ -150,7 +150,7 @@ export const isCheckMate = (board: Board, color: Color): boolean => {
     throw new Error('King not found on the board');
   } else {
     const kingIsChecked = isKingChecked(board, color);
-    return calculateMoveListForKing(position, board, kingIsChecked).length === 0;
+    return kingIsChecked && calculateMoveListForKing(position, board, kingIsChecked).length === 0;
   }
 };
 
