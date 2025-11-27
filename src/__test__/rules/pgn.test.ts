@@ -1,5 +1,5 @@
 import { Board, Move, Position } from '../../rules/types.ts';
-import { moveToPgn } from '../../rules/pgn.ts';
+import { moveToSan } from '../../rules/pgn.ts';
 import { createChessBoardFromFen } from '../../rules/board.ts';
 
 describe('test SAN for rook', () => {
@@ -13,7 +13,7 @@ describe('test SAN for rook', () => {
       figure: 'ROOK',
     };
     const current: Position = { row: 1, column: 'a' };
-    const pgn = moveToPgn(current, move, board, '-', []);
+    const pgn = moveToSan(current, move, board, '-', []);
     expect(pgn).toBe('Rad1');
   });
   it('builds correct SAN for rook move without take and same column', () => {
@@ -29,8 +29,8 @@ describe('test SAN for rook', () => {
 
     const current: Position = { row: 2, column: 'a' };
     const current2: Position = { row: 6, column: 'd' };
-    const san = moveToPgn(current, move, board, '-', []);
-    const san2 = moveToPgn(current2, move, board2, '-', []);
+    const san = moveToSan(current, move, board, '-', []);
+    const san2 = moveToSan(current2, move, board2, '-', []);
     expect(san).toBe('Rad2');
     expect(san2).toBe('R6d2');
   });
@@ -47,8 +47,8 @@ describe('test SAN for rook', () => {
 
     const current: Position = { row: 6, column: 'd' };
     const current2: Position = { row: 2, column: 'd' };
-    const san = moveToPgn(current, move, board, '-', []);
-    const san2 = moveToPgn(current2, move, board, '-', []);
+    const san = moveToSan(current, move, board, '-', []);
+    const san2 = moveToSan(current2, move, board, '-', []);
 
     expect(san).toBe('R6xd5');
     expect(san2).toBe('R2xd5');
@@ -62,7 +62,7 @@ describe('test SAN for rook', () => {
       figure: 'ROOK',
     };
     const current: Position = { row: 1, column: 'a' };
-    const pgn = moveToPgn(current, move, board, '-', []);
+    const pgn = moveToSan(current, move, board, '-', []);
     expect(pgn).toBe('Rd1');
   });
   it.skip('builds correct SAN for rook checking king ', () => {
@@ -89,16 +89,16 @@ describe('test SAN for bishop', () => {
     const bishop5: Position = { row: 3, column: 'g' };
 
     // board 1
-    const san = moveToPgn(bishop0, move, board, '-', []);
-    const san2 = moveToPgn(bishop1, move, board, '-', []);
-    const san3 = moveToPgn(bishop2, move, board, '-', []);
-    const san4 = moveToPgn(bishop3, move, board, '-', []);
+    const san = moveToSan(bishop0, move, board, '-', []);
+    const san2 = moveToSan(bishop1, move, board, '-', []);
+    const san3 = moveToSan(bishop2, move, board, '-', []);
+    const san4 = moveToSan(bishop3, move, board, '-', []);
 
     // board 2
-    const san5 = moveToPgn(bishop4, move, board2, '-', []);
-    const san6 = moveToPgn(bishop5, move, board2, '-', []);
-    const san8 = moveToPgn(bishop0, move, board2, '-', []);
-    const san7 = moveToPgn(bishop2, move, board2, '-', []);
+    const san5 = moveToSan(bishop4, move, board2, '-', []);
+    const san6 = moveToSan(bishop5, move, board2, '-', []);
+    const san8 = moveToSan(bishop0, move, board2, '-', []);
+    const san7 = moveToSan(bishop2, move, board2, '-', []);
 
     expect(san2).toBe('B3e5');
     expect(san3).toBe('Bge5');
@@ -123,13 +123,55 @@ describe('test SAN for bishop', () => {
     const bishop2: Position = { row: 7, column: 'g' };
     const bishop3: Position = { row: 3, column: 'g' };
 
-    const san = moveToPgn(bishop0, move, board, '-', []);
-    const san2 = moveToPgn(bishop1, move, board, '-', []);
-    const san3 = moveToPgn(bishop2, move, board, '-', []);
-    const san4 = moveToPgn(bishop3, move, board, '-', []);
+    const san = moveToSan(bishop0, move, board, '-', []);
+    const san2 = moveToSan(bishop1, move, board, '-', []);
+    const san3 = moveToSan(bishop2, move, board, '-', []);
+    const san4 = moveToSan(bishop3, move, board, '-', []);
     expect(san).toBe('Bc7e5');
     expect(san2).toBe('Bc3e5');
     expect(san3).toBe('Bg7e5');
     expect(san4).toBe('Bg3e5');
+  });
+  it('builds correct SAN for bishop move without take ', () => {
+    const board: Board = createChessBoardFromFen('4k3/8/6K1/3B4/8/3B2B1/8/8 w - - 1 1');
+    const move: Move = {
+      row: 6,
+      column: 'd',
+      color: 'white',
+      figure: 'BISHOP',
+    };
+    const move2: Move = {
+      row: 4,
+      column: 'e',
+      color: 'white',
+      figure: 'BISHOP',
+    };
+    const move3: Move = {
+      row: 5,
+      column: 'f',
+      color: 'white',
+      figure: 'BISHOP',
+    };
+    const current: Position = { row: 3, column: 'g' };
+    const current2: Position = { row: 3, column: 'd' };
+    const san = moveToSan(current, move, board, '-', []);
+    const san2 = moveToSan(current2, move2, board, '-', []);
+    const san3 = moveToSan(current2, move3, board, '-', []);
+    expect(san).toBe('Bd6');
+    expect(san2).toBe('B3e4');
+    expect(san3).toBe('Bf5');
+  });
+  it('builds correct SAN for bishop blocked by pawn without take ', () => {
+    const board: Board = createChessBoardFromFen('2B1k3/8/4p1K1/8/8/6B1/2B5/8 w - - 1 1');
+    const current: Position = { row: 2, column: 'c' };
+    const move: Move = {
+      row: 5,
+      column: 'f',
+      color: 'white',
+      figure: 'BISHOP',
+    };
+
+    const san = moveToSan(current, move, board, '-', []);
+    expect(san).toBe('Bf5');
   });
 }); 
