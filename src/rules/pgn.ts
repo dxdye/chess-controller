@@ -1,6 +1,7 @@
 import { match } from 'ts-pattern';
 import { calculateMoveListForPiece } from './move.ts';
-import { Board, CastlingLetter, EnPassentColumn, Move, Position } from './types.ts';
+import { Board, Move, Position } from './types.ts';
+import { isCheckMate, isKingChecked } from './check.ts';
 
 const buildFinalPgnString = (values: string[]) => values.filter((v) => v.length > 0).join('');
 
@@ -134,8 +135,15 @@ const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol:
   return buildFinalPgnString(sanMove);
 };
 
-const buildKingMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+const buildKingMoveSan = (move: Move, takeSymbol: string = 'x'): string => {
   const sanMove: string[] = ['K'];
+  if (move.isCastle) {
+    if (move.column === 'g') {
+      return 'O-O';
+    } else if (move.column === 'c') {
+      return 'O-O-O';
+    }
+  }
   if (move.isTaken) {
     sanMove.push(takeSymbol);
   }
@@ -143,7 +151,7 @@ const buildKingMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: 
   return buildFinalPgnString(sanMove);
 };
 
-const buildPawnMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+const buildPawnMoveSan = (curr: Position, move: Move, takeSymbol: string = 'x'): string => {
   const sanMove: string[] = [];
   if (move.isTaken) {
     sanMove.push(`${curr.column}${takeSymbol}`);
@@ -153,23 +161,24 @@ const buildPawnMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: 
 };
 
 //move list of other piece shouldn't overlap
-export const moveToSan = (
-  current: Position,
-  move: Move,
-  board: Board,
-  enPassentColumn: EnPassentColumn,
-  castlingRights: CastlingLetter[],
-  takeSymbol: string = 'x',
-): string =>
+export const moveToSanInner = (current: Position, move: Move, board: Board, takeSymbol: string = 'x'): string =>
   match(move.figure)
     .with('ROOK', () => buildRookMoveSan(current, move, board, takeSymbol))
     .with('BISHOP', () => buildBishopMoveSan(current, move, board, takeSymbol))
     .with('KNIGHT', () => buildKnightMoveSan(current, move, board, takeSymbol))
     .with('QUEEN', () => buildQueenMoveSan(current, move, board, takeSymbol))
-    .with('PAWN', () => buildPawnMoveSan(current, move, board, takeSymbol))
-    .with('KING', () => buildKingMoveSan(current, move, board, takeSymbol))
-    .exhaustive(); 
+    .with('PAWN', () => buildPawnMoveSan(current, move, takeSymbol))
+    .with('KING', () => buildKingMoveSan(move, takeSymbol))
+    .exhaustive();
 
+export const moveToSan = (current: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  if (isCheckMate(board, move.color)) {
+    return moveToSanInner(current, move, board, takeSymbol) + '#';
+  } else if (isKingChecked(board, move.color)) {
+    return moveToSanInner(current, move, board, takeSymbol) + '+';
+  }
+  return moveToSanInner(current, move, board, takeSymbol);
+};
 
   /*
    * ROOK or QUEEN on same row only the column is needed

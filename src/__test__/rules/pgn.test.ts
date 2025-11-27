@@ -13,7 +13,7 @@ describe('test SAN for rook', () => {
       figure: 'ROOK',
     };
     const current: Position = { row: 1, column: 'a' };
-    const pgn = moveToSan(current, move, board, '-', []);
+    const pgn = moveToSan(current, move, board);
     expect(pgn).toBe('Rad1');
   });
   it('builds correct SAN for rook move without take and same column', () => {
@@ -29,8 +29,8 @@ describe('test SAN for rook', () => {
 
     const current: Position = { row: 2, column: 'a' };
     const current2: Position = { row: 6, column: 'd' };
-    const san = moveToSan(current, move, board, '-', []);
-    const san2 = moveToSan(current2, move, board2, '-', []);
+    const san = moveToSan(current, move, board);
+    const san2 = moveToSan(current2, move, board2);
     expect(san).toBe('Rad2');
     expect(san2).toBe('R6d2');
   });
@@ -47,8 +47,8 @@ describe('test SAN for rook', () => {
 
     const current: Position = { row: 6, column: 'd' };
     const current2: Position = { row: 2, column: 'd' };
-    const san = moveToSan(current, move, board, '-', []);
-    const san2 = moveToSan(current2, move, board, '-', []);
+    const san = moveToSan(current, move, board);
+    const san2 = moveToSan(current2, move, board);
 
     expect(san).toBe('R6xd5');
     expect(san2).toBe('R2xd5');
@@ -62,7 +62,7 @@ describe('test SAN for rook', () => {
       figure: 'ROOK',
     };
     const current: Position = { row: 1, column: 'a' };
-    const pgn = moveToSan(current, move, board, '-', []);
+    const pgn = moveToSan(current, move, board);
     expect(pgn).toBe('Rd1');
   });
   it.skip('builds correct SAN for rook checking king ', () => {
@@ -89,16 +89,16 @@ describe('test SAN for bishop', () => {
     const bishop5: Position = { row: 3, column: 'g' };
 
     // board 1
-    const san = moveToSan(bishop0, move, board, '-', []);
-    const san2 = moveToSan(bishop1, move, board, '-', []);
-    const san3 = moveToSan(bishop2, move, board, '-', []);
-    const san4 = moveToSan(bishop3, move, board, '-', []);
+    const san = moveToSan(bishop0, move, board);
+    const san2 = moveToSan(bishop1, move, board);
+    const san3 = moveToSan(bishop2, move, board);
+    const san4 = moveToSan(bishop3, move, board);
 
     // board 2
-    const san5 = moveToSan(bishop4, move, board2, '-', []);
-    const san6 = moveToSan(bishop5, move, board2, '-', []);
-    const san8 = moveToSan(bishop0, move, board2, '-', []);
-    const san7 = moveToSan(bishop2, move, board2, '-', []);
+    const san5 = moveToSan(bishop4, move, board2);
+    const san6 = moveToSan(bishop5, move, board2);
+    const san8 = moveToSan(bishop0, move, board2);
+    const san7 = moveToSan(bishop2, move, board2);
 
     expect(san2).toBe('B3e5');
     expect(san3).toBe('Bge5');
@@ -123,10 +123,10 @@ describe('test SAN for bishop', () => {
     const bishop2: Position = { row: 7, column: 'g' };
     const bishop3: Position = { row: 3, column: 'g' };
 
-    const san = moveToSan(bishop0, move, board, '-', []);
-    const san2 = moveToSan(bishop1, move, board, '-', []);
-    const san3 = moveToSan(bishop2, move, board, '-', []);
-    const san4 = moveToSan(bishop3, move, board, '-', []);
+    const san = moveToSan(bishop0, move, board);
+    const san2 = moveToSan(bishop1, move, board);
+    const san3 = moveToSan(bishop2, move, board);
+    const san4 = moveToSan(bishop3, move, board);
     expect(san).toBe('Bc7e5');
     expect(san2).toBe('Bc3e5');
     expect(san3).toBe('Bg7e5');
@@ -154,9 +154,9 @@ describe('test SAN for bishop', () => {
     };
     const current: Position = { row: 3, column: 'g' };
     const current2: Position = { row: 3, column: 'd' };
-    const san = moveToSan(current, move, board, '-', []);
-    const san2 = moveToSan(current2, move2, board, '-', []);
-    const san3 = moveToSan(current2, move3, board, '-', []);
+    const san = moveToSan(current, move, board);
+    const san2 = moveToSan(current2, move2, board);
+    const san3 = moveToSan(current2, move3, board);
     expect(san).toBe('Bd6');
     expect(san2).toBe('B3e4');
     expect(san3).toBe('Bf5');
@@ -171,7 +171,7 @@ describe('test SAN for bishop', () => {
       figure: 'BISHOP',
     };
 
-    const san = moveToSan(current, move, board, '-', []);
+    const san = moveToSan(current, move, board);
     expect(san).toBe('Bf5');
   });
 });
@@ -190,11 +190,11 @@ describe('test SAN for knight', () => {
     const knight2: Position = { row: 3, column: 'f' };
     const knight3: Position = { row: 3, column: 'd' };
     const knight4: Position = { row: 4, column: 'c' };
-    const san0 = moveToSan(knight0, move, board, '-', []);
-    const san1 = moveToSan(knight1, move, board, '-', []);
-    const san2 = moveToSan(knight2, move, board, '-', []);
-    const san3 = moveToSan(knight3, move, board, '-', []);
-    const san4 = moveToSan(knight4, move, board, '-', []);
+    const san0 = moveToSan(knight0, move, board);
+    const san1 = moveToSan(knight1, move, board);
+    const san2 = moveToSan(knight2, move, board);
+    const san3 = moveToSan(knight3, move, board);
+    const san4 = moveToSan(knight4, move, board);
 
     expect(san0).toBe('N7e5');
     expect(san1).toBe('N6e5');
@@ -217,9 +217,9 @@ describe('test SAN for queen', () => {
     const queen1: Position = { row: 6, column: 'f' };
     const queen2: Position = { row: 2, column: 'f' };
 
-    const san0 = moveToSan(queen0, move, board, '-', []);
-    const san1 = moveToSan(queen1, move, board, '-', []);
-    const san2 = moveToSan(queen2, move, board, '-', []);
+    const san0 = moveToSan(queen0, move, board);
+    const san1 = moveToSan(queen1, move, board);
+    const san2 = moveToSan(queen2, move, board);
 
     expect(san0).toBe('Qbb2');
     expect(san1).toBe('Qf6b2');
@@ -237,7 +237,7 @@ describe('test SAN for pawn', () => {
       isTaken: true,
     };
     const current: Position = { row: 4, column: 'e' };
-    const san = moveToSan(current, move, board, '-', []);
+    const san = moveToSan(current, move, board);
     expect(san).toBe('exf5');
   });
 });
@@ -253,7 +253,7 @@ describe('test SAN for king', () => {
       isTaken: true,
     };
     const current: Position = { row: 4, column: 'f' };
-    const san = moveToSan(current, move, board, '-', []);
+    const san = moveToSan(current, move, board);
     expect(san).toBe('Kxf5');
   });
 });
