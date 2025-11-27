@@ -143,6 +143,7 @@ export const isKingChecked = (board: Board, kingColor: Color): boolean => {
   }
 };
 
+// this is true, however peaces captures avoiding checkmate are not considered here
 export const isCheckMate = (board: Board, color: Color): boolean => {
   //king has no moves.. and is checked
   const position = findKingPosition(board, color);
