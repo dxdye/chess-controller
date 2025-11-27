@@ -15,14 +15,13 @@ const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: 
   const pgnMove: string[] = ['R'];
   // there could be actually multiple pieces of same kind (pieces of same type and color)
   const otherRooks = board.filter(
-    (sq) =>
-      !(sq.figure === move.figure && sq.color === move.color && !(sq.row === move.row && sq.column === move.column)),
+    (sq) => sq.figure === move.figure && sq.color === move.color && !(sq.row === curr.row && sq.column === curr.column),
   );
 
   // same move in move list from other rook
   const rooksWithSameMove = otherRooks.filter((rook) => {
     const rookMoveList = calculateMoveListForPiece(rook, board);
-    return rookMoveList.includes(move);
+    return rookMoveList.some((some) => some.column === move.column && some.row === move.row);
   });
 
   const rooksWithSameMoveExist = rooksWithSameMove.length > 0;
@@ -40,25 +39,25 @@ const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: 
     } else {
       // has same row to some other rook
       // has same column to some other rook
-      pgnMove.push(`${curr.row}${curr.column}`);
+      pgnMove.push(`${curr.column}${curr.row}`);
     }
   }
   if (move.isTaken) {
     pgnMove.push(takeSymbol);
   }
-  pgnMove.push(`${move.row}${move.column}`);
+  pgnMove.push(`${move.column}${move.row}`);
   return buildFinalPgnString(pgnMove);
 };
 
 //move list of other piece shouldn't overlap
-const moveToPgn = (
+export const moveToPgn = (
   current: Position,
   move: Move,
   board: Board,
   enPassentColumn: EnPassentColumn,
   castlingRights: CastlingLetter[],
   takeSymbol: string = 'x',
-): string => {
+): string =>
   match(move.figure)
     .with('ROOK', () => buildRookMovePgn(current, move, board, takeSymbol))
     .otherwise(() => {
@@ -71,5 +70,3 @@ const moveToPgn = (
    * KNIGHT needs both row and column (if moveList does not overlap)
    * BISHOP and Queen on same diagonal need both row and column (if unambiguous)
    * */
-  return '';
-};
