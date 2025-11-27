@@ -7,13 +7,15 @@
 //i8n 
 //pgn generation
 
-import { createChessBoardFromFen } from "./board.ts";
-import { BOTH_CAN_CASTLE, INIT_POSITION } from "./constant.ts";
+import { match } from 'ts-pattern';
+import { createChessBoardFromFen } from './board.ts';
+import { BOTH_CAN_CASTLE, INIT_POSITION } from './constant.ts';
 import {
   Board,
   CastlingLetter,
   EnPassentColumn,
   Fen,
+  Move,
   MoveConfirmation,
   Piece,
   Position,
@@ -50,6 +52,44 @@ const castlingRightsActions = {
     },
   },
 } as const;
+
+export const makeMoveOnBoard = (curr: Position, move: Move, board: Board): Board => {
+  const newBoard = board.filter(
+    (sq) => !(sq.row === curr.row && sq.column === curr.column) && !(sq.row === move.row && sq.column === move.column),
+  );
+
+  match(move.isCastle)
+    .with('K', () => {
+      newBoard.filter((sq) => !(sq.row === 1 && sq.column === 'h'));
+      newBoard.push({ row: 1, column: 'g', figure: 'KING', color: 'white' });
+      newBoard.push({ row: 1, column: 'f', figure: 'ROOK', color: 'white' });
+    })
+    .with('Q', () => {
+      newBoard.filter((sq) => !(sq.row === 1 && sq.column === 'a'));
+      newBoard.push({ row: 1, column: 'c', figure: 'KING', color: 'white' });
+      newBoard.push({ row: 1, column: 'd', figure: 'ROOK', color: 'white' });
+    })
+    .with('k', () => {
+      newBoard.filter((sq) => !(sq.row === 8 && sq.column === 'h'));
+      newBoard.push({ row: 8, column: 'g', figure: 'KING', color: 'black' });
+      newBoard.push({ row: 8, column: 'f', figure: 'ROOK', color: 'black' });
+    })
+    .with('q', () => {
+      newBoard.filter((sq) => !(sq.row === 8 && sq.column === 'a'));
+      newBoard.push({ row: 8, column: 'c', figure: 'KING', color: 'black' });
+      newBoard.push({ row: 8, column: 'd', figure: 'ROOK', color: 'black' });
+    })
+    .otherwise(() => {
+      newBoard.push({
+        column: move.column,
+        row: move.row,
+        figure: move.figure,
+        color: move.color,
+      });
+    });
+  return newBoard;
+};
+
 
 export class Game {
   turn: StrictColor;
