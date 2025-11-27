@@ -65,8 +65,18 @@ describe('test SAN for rook', () => {
     const pgn = moveToSan(current, move, board);
     expect(pgn).toBe('Rd1');
   });
-  it.skip('builds correct SAN for rook checking king ', () => {
-    //tbd
+  it('builds correct SAN for rook checking king ', () => {
+    const board = createChessBoardFromFen('2r4k/6pp/8/6R1/2B5/3B4/8/4K2R w K - 2 1');
+    const move: Move = {
+      row: 7,
+      column: 'h',
+      color: 'white',
+      figure: 'ROOK',
+      isTaken: true,
+    };
+    const current: Position = { row: 1, column: 'h' };
+    const san = moveToSan(current, move, board);
+    expect(san).toBe('Rxh7#');
   });
 });
 
@@ -174,6 +184,32 @@ describe('test SAN for bishop', () => {
     const san = moveToSan(current, move, board);
     expect(san).toBe('Bf5');
   });
+  it('builed correct SAN for bishop giving checkmate', () => {
+    const board: Board = createChessBoardFromFen('2r4k/6pp/8/6R1/2BB4/8/8/4K2R w K - 1 1');
+    const current: Position = { row: 4, column: 'd' };
+    const move: Move = {
+      row: 7,
+      column: 'g',
+      color: 'white',
+      figure: 'BISHOP',
+      isTaken: true,
+    };
+    const san = moveToSan(current, move, board);
+    expect(san).toBe('Bxg7#');
+  });
+  it('builds correct SAN for bishop giving check', () => {
+    const board: Board = createChessBoardFromFen('2r2k2/6pp/8/6R1/2B5/2B5/8/4K2R w K - 2 1');
+    const current: Position = { row: 3, column: 'c' };
+    const move: Move = {
+      row: 7,
+      column: 'g',
+      color: 'white',
+      figure: 'BISHOP',
+      isTaken: true,
+    };
+    const san = moveToSan(current, move, board);
+    expect(san).toBe('Bxg7+');
+  });
 });
 
 describe('test SAN for knight', () => {
@@ -201,6 +237,40 @@ describe('test SAN for knight', () => {
     expect(san2).toBe('Nf3e5');
     expect(san3).toBe('Nde5');
     expect(san4).toBe('N4e5');
+  });
+  it('builds correct SAN for knight move giving check', () => {
+    const board = createChessBoardFromFen('2r1k3/6pp/8/5NR1/2B5/2B5/8/4K2R w K - 2 1');
+    const current: Position = { row: 5, column: 'f' };
+    const move: Move = {
+      row: 7,
+      column: 'g',
+      color: 'white',
+      figure: 'KNIGHT',
+      isTaken: true,
+    };
+    const move2: Move = {
+      row: 6,
+      column: 'd',
+      color: 'white',
+      figure: 'KNIGHT',
+    };
+
+    const san = moveToSan(current, move, board);
+    const san2 = moveToSan(current, move2, board);
+    expect(san).toBe('Nxg7+');
+    expect(san2).toBe('Nd6+');
+  });
+  it('builds correct SAN for knight move giving checkmate', () => {
+    const board = createChessBoardFromFen('2r4k/6pp/8/6R1/2B2N2/2B5/8/4K2R w K - 2 1');
+    const current: Position = { row: 4, column: 'f' };
+    const move: Move = {
+      row: 6,
+      column: 'g',
+      color: 'white',
+      figure: 'KNIGHT',
+    };
+    const san = moveToSan(current, move, board);
+    expect(san).toBe('Ng6#');
   });
 });
 
@@ -297,5 +367,11 @@ describe('test SAN for king', () => {
     const move: Move = { row: 8, column: 'c', color: 'black', figure: 'KING', isCastle: 'q' };
     const san = moveToSan({ row: 8, column: 'e' }, move, board);
     expect(san).toBe('O-O-O+');
+  });
+  it('builds correct SAN for white king side castle giving checkmate', () => {
+    const board = createChessBoardFromFen('2r2k2/8/4R3/6R1/8/8/8/4K2R w K - 1 1');
+    const move: Move = { row: 1, column: 'g', color: 'white', figure: 'KING', isCastle: 'K' };
+    const san = moveToSan({ row: 1, column: 'e' }, move, board);
+    expect(san).toBe('O-O#');
   });
 });
