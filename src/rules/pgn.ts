@@ -27,20 +27,17 @@ const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: 
   const rooksWithSameMoveExist = rooksWithSameMove.length > 0;
   if (rooksWithSameMoveExist) {
     // no other rook can move to the same square
-    const hasSameRow = rooksWithSameMove.some((rook) => rook.row === move.row);
-    const hasSameColumn = rooksWithSameMove.some((rook) => rook.column === move.column);
+    const hasSameColumn = rooksWithSameMove.some((rook) => rook.column === curr.column); // some move has same column
 
-    if (hasSameRow && !hasSameColumn) {
+    if (hasSameColumn) {
       // has same row to some other rook
-      pgnMove.push(`${curr.column}`);
-    } else if (!hasSameRow && hasSameColumn) {
       // has same column to some other rook
       pgnMove.push(`${curr.row}`);
     } else {
-      // has same row to some other rook
-      // has same column to some other rook
-      pgnMove.push(`${curr.column}${curr.row}`);
+      pgnMove.push(`${curr.column}`); // column is nearly sufficient
     }
+
+    //shouldn't be possible that both row and column are same as other rook's move
   }
   if (move.isTaken) {
     pgnMove.push(takeSymbol);
