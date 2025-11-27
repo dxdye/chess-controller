@@ -1,15 +1,8 @@
 import { match } from 'ts-pattern';
 import { calculateMoveListForPiece } from './move.ts';
-import { Board, CastlingLetter, EnPassentColumn, Move, Piece, DestMove, Position } from './types.ts';
+import { Board, CastlingLetter, EnPassentColumn, Move, Position } from './types.ts';
 
 const buildFinalPgnString = (values: string[]) => values.filter((v) => v.length > 0).join('');
-
-//move list calculation is expensive, so if mirror piece does not exist, we skip move list calculation
-const doesMirrorPieceExist = (piece: Piece, board: Board): boolean =>
-  piece.figure != 'KING' && board.some((sq) => sq.figure === piece.figure && sq.color === piece.color);
-
-const doesMoveListOverlap = (moveOfPiece: DestMove[], moveOfMirrorPiece: DestMove[]): boolean =>
-  moveOfPiece.some((m) => moveOfMirrorPiece.some((l) => m.row === l.row && m.column === l.column));
 
 const buildRookMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x') => {
   const pgnMove: string[] = ['R'];
@@ -79,6 +72,38 @@ const buildBishopMoveSan = (curr: Position, move: Move, board: Board, takeSymbol
   return buildFinalPgnString(sanMove);
 };
 
+const buildKnightMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  const sanMove: string[] = ['N'];
+  const otherKnights = board.filter(
+    (sq) => sq.figure === 'KNIGHT' && sq.color === move.color && !(sq.row === curr.row && sq.column === curr.column),
+  );
+
+  const knightsWithSameMove = otherKnights.filter((knight) => {
+    const knightMoveList = calculateMoveListForPiece(knight, board);
+    return knightMoveList.some((s) => s.column === move.column && s.row === move.row);
+  });
+
+  const knightsWithSameMoveExist = knightsWithSameMove.length > 0;
+  if (knightsWithSameMoveExist) {
+    const knightWithSameColumnExists = knightsWithSameMove.some((knight) => knight.column === curr.column);
+    const knightWithSameRowExists = knightsWithSameMove.some((knight) => knight.row === curr.row);
+
+    if (knightWithSameColumnExists && knightWithSameRowExists) {
+      sanMove.push(`${curr.column}${curr.row}`);
+    } else if (knightWithSameColumnExists) {
+      sanMove.push(`${curr.row}`);
+    } else {
+      sanMove.push(`${curr.column}`);
+    }
+  }
+  if (move.isTaken) {
+    sanMove.push(takeSymbol);
+  }
+  sanMove.push(`${move.column}${move.row}`);
+
+  return buildFinalPgnString(sanMove);
+};
+
 //move list of other piece shouldn't overlap
 export const moveToSan = (
   current: Position,
@@ -91,6 +116,7 @@ export const moveToSan = (
   match(move.figure)
     .with('ROOK', () => buildRookMoveSan(current, move, board, takeSymbol))
     .with('BISHOP', () => buildBishopMoveSan(current, move, board, takeSymbol))
+    .with('KNIGHT', () => buildKnightMoveSan(current, move, board, takeSymbol))
     .otherwise(() => {
       throw new Error(`moveToSan not implemented for figure ${move.figure}`);
     });

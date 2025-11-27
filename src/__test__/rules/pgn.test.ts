@@ -175,3 +175,32 @@ describe('test SAN for bishop', () => {
     expect(san).toBe('Bf5');
   });
 }); 
+
+describe('test SAN for knight', () => {
+  it('builds correct SAN for knight move without take and same row', () => {
+    const board = createChessBoardFromFen('k7/5N2/2N1p1K1/8/2N5/3N1N2/8/8 w - - 1 1');
+    const move: Move = {
+      row: 5,
+      column: 'e',
+      color: 'white',
+      figure: 'KNIGHT',
+    };
+    const knight0: Position = { row: 7, column: 'f' };
+    const knight1: Position = { row: 6, column: 'c' };
+    const knight2: Position = { row: 3, column: 'f' };
+    const knight3: Position = { row: 3, column: 'd' };
+    const knight4: Position = { row: 4, column: 'c' };
+    const san0 = moveToSan(knight0, move, board, '-', []);
+    const san1 = moveToSan(knight1, move, board, '-', []);
+    const san2 = moveToSan(knight2, move, board, '-', []);
+    const san3 = moveToSan(knight3, move, board, '-', []);
+    const san4 = moveToSan(knight4, move, board, '-', []);
+
+    expect(san0).toBe('N7e5');
+    expect(san1).toBe('N6e5');
+    expect(san2).toBe('Nf3e5');
+    expect(san3).toBe('Nde5');
+    expect(san4).toBe('N4e5');
+  });
+});
+
