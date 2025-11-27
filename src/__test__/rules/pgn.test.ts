@@ -174,7 +174,7 @@ describe('test SAN for bishop', () => {
     const san = moveToSan(current, move, board, '-', []);
     expect(san).toBe('Bf5');
   });
-}); 
+});
 
 describe('test SAN for knight', () => {
   it('builds correct SAN for knight move without take and same row', () => {
@@ -226,4 +226,34 @@ describe('test SAN for queen', () => {
     expect(san2).toBe('Q2b2');
   });
 });
+describe('test SAN for pawn', () => {
+  it('builds correct SAN for pawn move with take', () => {
+    const board = createChessBoardFromFen('3k4/8/8/1pp2p2/2P1P3/8/6K1/8 w - - 0 1');
+    const move: Move = {
+      row: 5,
+      column: 'f',
+      color: 'white',
+      figure: 'PAWN',
+      isTaken: true,
+    };
+    const current: Position = { row: 4, column: 'e' };
+    const san = moveToSan(current, move, board, '-', []);
+    expect(san).toBe('exf5');
+  });
+});
 
+describe('test SAN for king', () => {
+  it('build correct SAN for king move with take', () => {
+    const board = createChessBoardFromFen('3k4/3P4/4P3/1pp2p2/5K2/8/8/8 w - - 0 1');
+    const move: Move = {
+      row: 5,
+      column: 'f',
+      color: 'white',
+      figure: 'KING',
+      isTaken: true,
+    };
+    const current: Position = { row: 4, column: 'f' };
+    const san = moveToSan(current, move, board, '-', []);
+    expect(san).toBe('Kxf5');
+  });
+});

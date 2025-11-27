@@ -134,6 +134,24 @@ const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol:
   return buildFinalPgnString(sanMove);
 };
 
+const buildKingMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  const sanMove: string[] = ['K'];
+  if (move.isTaken) {
+    sanMove.push(takeSymbol);
+  }
+  sanMove.push(`${move.column}${move.row}`);
+  return buildFinalPgnString(sanMove);
+};
+
+const buildPawnMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  const sanMove: string[] = [];
+  if (move.isTaken) {
+    sanMove.push(`${curr.column}${takeSymbol}`);
+  }
+  sanMove.push(`${move.column}${move.row}`);
+  return buildFinalPgnString(sanMove);
+};
+
 //move list of other piece shouldn't overlap
 export const moveToSan = (
   current: Position,
@@ -148,9 +166,10 @@ export const moveToSan = (
     .with('BISHOP', () => buildBishopMoveSan(current, move, board, takeSymbol))
     .with('KNIGHT', () => buildKnightMoveSan(current, move, board, takeSymbol))
     .with('QUEEN', () => buildQueenMoveSan(current, move, board, takeSymbol))
-    .otherwise(() => {
-      throw new Error(`moveToSan not implemented for figure ${move.figure}`);
-    });
+    .with('PAWN', () => buildPawnMoveSan(current, move, board, takeSymbol))
+    .with('KING', () => buildKingMoveSan(current, move, board, takeSymbol))
+    .exhaustive(); 
+
 
   /*
    * ROOK or QUEEN on same row only the column is needed
