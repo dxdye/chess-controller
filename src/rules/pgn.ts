@@ -11,7 +11,7 @@ const doesMirrorPieceExist = (piece: Piece, board: Board): boolean =>
 const doesMoveListOverlap = (moveOfPiece: DestMove[], moveOfMirrorPiece: DestMove[]): boolean =>
   moveOfPiece.some((m) => moveOfMirrorPiece.some((l) => m.row === l.row && m.column === l.column));
 
-const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x') => {
+const buildRookMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x') => {
   const pgnMove: string[] = ['R'];
   // there could be actually multiple pieces of same kind (pieces of same type and color)
   const otherRooks = board.filter(
@@ -42,11 +42,12 @@ const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: 
   if (move.isTaken) {
     pgnMove.push(takeSymbol);
   }
+  //is king checked?
   pgnMove.push(`${move.column}${move.row}`);
   return buildFinalPgnString(pgnMove);
 };
 
-const buildBishopMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+const buildBishopMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
   const sanMove: string[] = ['B'];
   const otherBishops = board.filter(
     (sq) => sq.figure === 'BISHOP' && sq.color === move.color && !(sq.row === curr.row && sq.column === curr.column),
@@ -79,7 +80,7 @@ const buildBishopMovePgn = (curr: Position, move: Move, board: Board, takeSymbol
 };
 
 //move list of other piece shouldn't overlap
-export const moveToPgn = (
+export const moveToSan = (
   current: Position,
   move: Move,
   board: Board,
@@ -88,10 +89,10 @@ export const moveToPgn = (
   takeSymbol: string = 'x',
 ): string =>
   match(move.figure)
-    .with('ROOK', () => buildRookMovePgn(current, move, board, takeSymbol))
-    .with('BISHOP', () => buildBishopMovePgn(current, move, board, takeSymbol))
+    .with('ROOK', () => buildRookMoveSan(current, move, board, takeSymbol))
+    .with('BISHOP', () => buildBishopMoveSan(current, move, board, takeSymbol))
     .otherwise(() => {
-      throw new Error(`moveToPgn not implemented for figure ${move.figure}`);
+      throw new Error(`moveToSan not implemented for figure ${move.figure}`);
     });
 
   /*
