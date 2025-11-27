@@ -104,6 +104,36 @@ const buildKnightMoveSan = (curr: Position, move: Move, board: Board, takeSymbol
   return buildFinalPgnString(sanMove);
 };
 
+const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  const sanMove: string[] = ['Q'];
+  const otherQueens = board.filter(
+    (sq) => sq.figure === 'QUEEN' && sq.color === move.color && !(sq.row === curr.row && sq.column === curr.column),
+  );
+
+  const queensWithSameMove = otherQueens.filter((queen) => {
+    const queenMoveList = calculateMoveListForPiece(queen, board);
+    return queenMoveList.some((s) => s.column === move.column && s.row === move.row);
+  });
+  const queensWithSameMoveExist = queensWithSameMove.length > 0;
+  if (queensWithSameMoveExist) {
+    const queenWithSameColumnExists = queensWithSameMove.some((queen) => queen.column === curr.column);
+    const queenWithSameRowExists = queensWithSameMove.some((queen) => queen.row === curr.row);
+
+    if (queenWithSameColumnExists && queenWithSameRowExists) {
+      sanMove.push(`${curr.column}${curr.row}`);
+    } else if (queenWithSameColumnExists) {
+      sanMove.push(`${curr.row}`);
+    } else {
+      sanMove.push(`${curr.column}`);
+    }
+  }
+  if (move.isTaken) {
+    sanMove.push(takeSymbol);
+  }
+  sanMove.push(`${move.column}${move.row}`);
+  return buildFinalPgnString(sanMove);
+};
+
 //move list of other piece shouldn't overlap
 export const moveToSan = (
   current: Position,
@@ -117,6 +147,7 @@ export const moveToSan = (
     .with('ROOK', () => buildRookMoveSan(current, move, board, takeSymbol))
     .with('BISHOP', () => buildBishopMoveSan(current, move, board, takeSymbol))
     .with('KNIGHT', () => buildKnightMoveSan(current, move, board, takeSymbol))
+    .with('QUEEN', () => buildQueenMoveSan(current, move, board, takeSymbol))
     .otherwise(() => {
       throw new Error(`moveToSan not implemented for figure ${move.figure}`);
     });

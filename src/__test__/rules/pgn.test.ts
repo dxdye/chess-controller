@@ -204,3 +204,26 @@ describe('test SAN for knight', () => {
   });
 });
 
+describe('test SAN for queen', () => {
+  it('builds correct SAN for queen move without take and same row and column', () => {
+    const board = createChessBoardFromFen('4k3/8/1Q3Q2/8/8/8/5Q2/4K3 w - - 1 1');
+    const move: Move = {
+      row: 2,
+      column: 'b',
+      color: 'white',
+      figure: 'QUEEN',
+    };
+    const queen0: Position = { row: 6, column: 'b' };
+    const queen1: Position = { row: 6, column: 'f' };
+    const queen2: Position = { row: 2, column: 'f' };
+
+    const san0 = moveToSan(queen0, move, board, '-', []);
+    const san1 = moveToSan(queen1, move, board, '-', []);
+    const san2 = moveToSan(queen2, move, board, '-', []);
+
+    expect(san0).toBe('Qbb2');
+    expect(san1).toBe('Qf6b2');
+    expect(san2).toBe('Q2b2');
+  });
+});
+
