@@ -46,6 +46,38 @@ const buildRookMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: 
   return buildFinalPgnString(pgnMove);
 };
 
+const buildBishopMovePgn = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
+  const sanMove: string[] = ['B'];
+  const otherBishops = board.filter(
+    (sq) => sq.figure === 'BISHOP' && sq.color === move.color && !(sq.row === curr.row && sq.column === curr.column),
+  );
+
+  const bishopsWithSameMove = otherBishops.filter((bishop) => {
+    const bishopMoveList = calculateMoveListForPiece(bishop, board);
+    return bishopMoveList.some((s) => s.column === move.column && s.row === move.row);
+  });
+
+  const bishopsWithSameMoveExist = bishopsWithSameMove.length > 0;
+  if (bishopsWithSameMoveExist) {
+    const bishopWithSameColumnExists = bishopsWithSameMove.some((bishop) => bishop.column === curr.column);
+    const bishopWithSameRowExists = bishopsWithSameMove.some((bishop) => bishop.row === curr.row);
+
+    if (bishopWithSameColumnExists && bishopWithSameRowExists) {
+      sanMove.push(`${curr.column}${curr.row}`);
+    } else if (bishopWithSameColumnExists) {
+      sanMove.push(`${curr.row}`);
+    } else {
+      sanMove.push(`${curr.column}`);
+    }
+  }
+  if (move.isTaken) {
+    sanMove.push(takeSymbol);
+  }
+  sanMove.push(`${move.column}${move.row}`);
+
+  return buildFinalPgnString(sanMove);
+};
+
 //move list of other piece shouldn't overlap
 export const moveToPgn = (
   current: Position,
@@ -57,6 +89,7 @@ export const moveToPgn = (
 ): string =>
   match(move.figure)
     .with('ROOK', () => buildRookMovePgn(current, move, board, takeSymbol))
+    .with('BISHOP', () => buildBishopMovePgn(current, move, board, takeSymbol))
     .otherwise(() => {
       throw new Error(`moveToPgn not implemented for figure ${move.figure}`);
     });
@@ -65,5 +98,6 @@ export const moveToPgn = (
    * ROOK or QUEEN on same row only the column is needed
    * ROOK or QUEEN on same column only row the is needed
    * KNIGHT needs both row and column (if moveList does not overlap)
-   * BISHOP and Queen on same diagonal need both row and column (if unambiguous)
+   * BISHOP and Queen on same diagonal need both row and column (if ambiguous) 
+   * normally 3 queens needed
    * */
