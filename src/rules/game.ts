@@ -54,9 +54,19 @@ const castlingRightsActions = {
 } as const;
 
 export const makeMoveOnBoard = (curr: Position, move: Move, board: Board): Board => {
-  const newBoard = board.filter(
-    (sq) => !(sq.row === curr.row && sq.column === curr.column) && !(sq.row === move.row && sq.column === move.column),
-  );
+  let newBoard;
+
+  if (move.isTakenEnPassent) {
+    newBoard = board.filter(
+      (sq) =>
+        !(sq.row === curr.row && sq.column === curr.column) && !(sq.row === curr.row && sq.column === move.column),
+    );
+  } else {
+    newBoard = board.filter(
+      (sq) =>
+        !(sq.row === curr.row && sq.column === curr.column) && !(sq.row === move.row && sq.column === move.column),
+    );
+  }
 
   match(move.isCastle)
     .with('K', () => {
