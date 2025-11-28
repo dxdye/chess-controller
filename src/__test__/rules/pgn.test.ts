@@ -1,7 +1,6 @@
 import { Board, Move, Position } from '../../rules/types.ts';
 import { moveToSan } from '../../rules/pgn.ts';
 import { createChessBoardFromFen } from '../../rules/board.ts';
-import { makeMoveOnBoard } from '../../rules/game.ts';
 
 describe('test SAN for rook', () => {
   it('builds correct PGN for rook move without take and same row', () => {

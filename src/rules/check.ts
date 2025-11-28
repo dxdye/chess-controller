@@ -3,7 +3,6 @@ import { boardToPieceMap, positionToCoordinate, getPieceFromPieceMap } from './b
 import { coordinateToPosition } from './transform.ts';
 import { isIndexInBound, isNil, isNotNil } from './helper.ts';
 import { calculateMoveListForKing, calculateMoveListForPiece } from './move.ts';
-import { makeMoveOnBoard } from './game.ts';
 
 const isOpponentKing = (color: Color, piece: Piece | null): boolean =>
   isNotNil(piece) && piece.figure === 'KING' && color !== piece.color;
