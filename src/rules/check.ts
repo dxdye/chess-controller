@@ -2,7 +2,8 @@ import { Board, Color, Position, Direction, BoardPieceMap, Figure, Piece } from 
 import { boardToPieceMap, positionToCoordinate, getPieceFromPieceMap } from './board.ts';
 import { coordinateToPosition } from './transform.ts';
 import { isIndexInBound, isNil, isNotNil } from './helper.ts';
-import { calculateMoveListForKing } from './move.ts';
+import { calculateMoveListForKing, calculateMoveListForPiece } from './move.ts';
+import { makeMoveOnBoard } from './game.ts';
 
 const isOpponentKing = (color: Color, piece: Piece | null): boolean =>
   isNotNil(piece) && piece.figure === 'KING' && color !== piece.color;
@@ -151,7 +152,32 @@ export const isCheckMate = (board: Board, color: Color): boolean => {
     throw new Error('King not found on the board');
   } else {
     const kingIsChecked = isKingChecked(board, color);
-    return kingIsChecked && calculateMoveListForKing(position, board, kingIsChecked).length === 0;
+    //other moves could uncheck the king
+    //is king still checked after all possible moves?
+    //checkmate is only if no move is possible anymore
+    if (kingIsChecked) {
+      const noPossibleMoveForKing = calculateMoveListForKing(position, board, kingIsChecked).length === 0;
+      if (noPossibleMoveForKing) {
+        //check whether move there is a move that can uncheck the king
+        const isNotCheckMate =
+          board
+            .map((piece) => {
+              //other piece of same color
+              if (piece.color === color && piece.figure !== 'KING') {
+                //calculate move list for piece
+
+                // already filtered moves that would leave king in check
+                const possibleMoves = calculateMoveListForPiece({ row: piece.row, column: piece.column }, board);
+                //for each move, make move on copy of board and check whether king is still checked
+                return possibleMoves.length > 0;
+              }
+            })
+            .reduce((prev, curr) => prev || curr, false) ?? false;
+        //if no pieces of that color are left, then checkmate
+        return !isNotCheckMate;
+      }
+    }
+    return false;
   }
 };
 
