@@ -1,6 +1,6 @@
 import { INIT_POSITION } from './constant.ts';
 import { isNil } from './helper.ts';
-import { Fen, Board, Color } from './types.ts';
+import { Fen, Board, Color, CastlingLetter, CastlingLetters, EnPassentColumn, StrictColor } from './types.ts';
 import { figureToLetter } from './transform.ts';
 
 const validFen =
@@ -54,23 +54,24 @@ export const extractPiecePlacementFromFen = (position: Fen) => {
   return position.split(' ').at(0) ?? '';
 };
 
-export const extractActiveColorFromFen = (position: Fen): Color => {
+export const extractActiveColorFromFen = (position: Fen): StrictColor => {
   const parts = position.split(' ');
   if (parts.length < 2) throw new Error('Invalid Fen string: no denoted active color');
   const activeColorPart = parts[1];
   return activeColorPart === 'w' ? 'white' : 'black';
 };
-export const extractCastlingRightsFromFen = (position: Fen): string => {
+export const extractCastlingRightsFromFen = (position: Fen): CastlingLetter[] => {
   const parts = position.split(' ');
   if (parts.length < 3) throw new Error('Invalid Fen string: no denoted castling rights');
-  const castlingPart = parts[2];
-  return castlingPart ?? '';
+  const castlingPart = parts[2] ?? '-';
+  if (castlingPart === '-') return [];
+  return castlingPart.split('').filter((c): c is CastlingLetter => (CastlingLetters as readonly string[]).includes(c));
 };
-export const extractEnPassentTargetFromFen = (position: Fen): string => {
+export const extractEnPassentTargetFromFen = (position: Fen): EnPassentColumn => {
   const parts = position.split(' ');
   if (parts.length < 4) throw new Error('Invalid Fen string: no denoted en passent target');
   const enPassentPart = parts[3];
-  return enPassentPart ?? '';
+  return (enPassentPart?.charAt(0) as EnPassentColumn) ?? '-';
 };
 export const extractHalfmoveClockFromFen = (position: Fen): number => {
   const parts = position.split(' ');
@@ -87,23 +88,10 @@ export const extractMoveCountFromFen = (position: Fen): number => {
 
 export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;
 
-// export const extractCastlingRightsFromFen = (fen: Fen) => {
-//   const parts = fen.split(' ');
-//   if (parts.length < 3) throw new Error('Invalid Fen string');
-//   const castlingPart = parts[2];
-//   return {
-//     whiteKingSideCastle: castlingPart.includes('K'),
-//     whiteQueenSideCastle: castlingPart.includes('Q'),
-//     blackKingSideCastle: castlingPart.includes('k'),
-//     blackQueenSideCastle: castlingPart.includes('q'),
-//   };
-// };
-
 export const createFenFromChessBoard = (board: Board): Fen => {
   const rows: string[] = Array(8).fill('');
   board.forEach((square) => {
     const rowIndex = 8 - square.row;
-    const colIndex = square.column.charCodeAt(0) - 'a'.charCodeAt(0);
     rows[rowIndex] += figureToLetter({
       figure: square.figure,
       color: square.color,

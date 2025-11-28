@@ -212,7 +212,7 @@ export const calculateMoveListForKing = (
   });
 
   //castling logic
-  //evaluated externally:
+  //castling rights are evaluated externally:
   //king has moved, prevents color castling
   //white left rook moved, prevents white queen side castle
   //white right rook moved, prevents white king side castle
@@ -236,6 +236,8 @@ export const calculateMoveListForKing = (
         isCorrectPosition &&
         isPathEmpty(boardColorMap, { row: 1, column: 'f' }) &&
         isPathEmpty(boardColorMap, { row: 1, column: 'g' }) &&
+        // this actuaally not needed anymore, because the list of moves gets pruned afterwards
+        // maybe remove later..
         !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'f' }, fromColor) &&
         !wouldPositionBeChecked(boardWithoutKing, { row: 1, column: 'g' }, fromColor) &&
         isPieceRook(board, { row: 1, column: 'h' }, fromColor)
@@ -384,7 +386,7 @@ export const calculateMoveListForPawn = (
 export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
-  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // is true if pawn was moved two squares in the last move
+  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // the column of the last two step pawn move
   castlingRights: CastlingLetter[] = [],
 ): Move[] => {
   const piece = board.find((square) => square.row === from.row && square.column === from.column);
@@ -403,25 +405,18 @@ export const calculateMoveListForPiece = (
     .otherwise(() => {
       throw new Error('Invalid piece type');
     });
-  //prune moveList if kingIsChecked
-  if (kingIsChecked) {
-    return moveList.filter((move) => {
-      const newBoard = makeMoveOnBoard(
-        from,
-        // might be week
-        { ...move, figure: piece?.figure ?? 'PAWN', color: piece?.color ?? 'none' },
-        board,
-      );
-      return !isKingChecked(newBoard, piece?.color ?? 'none');
-    });
-  }
-  return moveList;
+
+  //don't allow moves that would put own king in check
+  const prunedMoveList = moveList.filter((move) => {
+    const newBoard = makeMoveOnBoard(
+      from,
+      // might be week
+      { ...move, figure: piece?.figure ?? 'PAWN', color: piece?.color ?? 'none' },
+      board,
+    );
+    return !isKingChecked(newBoard, piece?.color ?? 'none');
+  });
+
+  return prunedMoveList;
 };
 
-//export const pruneMoveListForCheck = (board: Board, from: Position, moveList: Move[]): Move[] => {
-
-//tbd
-//en passent
-//castling
-//move game
-//check for check before and after move /*prune movelist */
