@@ -19,9 +19,17 @@ import {
   MoveConfirmation,
   Piece,
   Position,
+  PromotionFigure,
   StrictColor,
 } from './types.ts';
 import { calculateMoveListForPiece } from './move.ts';
+import {
+  extractActiveColorFromFen,
+  extractCastlingRightsFromFen,
+  extractEnPassentTargetFromFen,
+  extractHalfmoveClockFromFen,
+  extractMoveCountFromFen,
+} from './fen.ts';
 
 const castlingRightsActions = {
   //remove castling rights after king or rook move
@@ -53,8 +61,27 @@ const castlingRightsActions = {
   },
 } as const;
 
-export const makeMoveOnBoard = (curr: Position, move: Move, board: Board): Board => {
+export const makeMoveOnBoard = (curr: Position, move: Move, board: Board, promoteTo?: PromotionFigure): Board => {
   let newBoard;
+  if (promoteTo !== undefined && move.figure === 'PAWN') {
+    if (move.row === (move.color === 'white' ? 8 : 1)) {
+      newBoard = board.filter(
+        (sq) =>
+          !(sq.row === curr.row && sq.column === curr.column) && !(sq.row === move.row && sq.column === move.column),
+      );
+      newBoard.push({
+        column: move.column,
+        row: move.row,
+        figure: promoteTo,
+        color: move.color,
+      });
+      return newBoard;
+    } else {
+      throw new Error(
+        `Invalid promotion: Pawn not on backrank. Can not promote. Row: ${curr.row} Column: ${curr.column} Color: ${move.color}`,
+      );
+    }
+  }
 
   if (move.isTakenEnPassent) {
     newBoard = board.filter(
@@ -100,6 +127,23 @@ export const makeMoveOnBoard = (curr: Position, move: Move, board: Board): Board
   return newBoard;
 };
 
+export const gameFromFen = (fen: Fen): Game => {
+  const game = new Game();
+  game.setPositionToFen(fen);
+  game.turn = extractActiveColorFromFen(fen);
+  game.castlingRights = extractCastlingRightsFromFen(fen);
+  game.enPassantTarget = extractEnPassentTargetFromFen(fen);
+  game.halfmoveClock = extractHalfmoveClockFromFen(fen);
+  game.fullmoveNumber = extractMoveCountFromFen(fen);
+  if (game.halfmoveClock < 0) {
+    throw new Error('Invalid FEN string: halfmove clock cannot be negative');
+  }
+  if (game.fullmoveNumber <= 0) {
+    throw new Error('Invalid FEN string: fullmove number must be positive');
+  }
+
+  return game;
+};
 
 export class Game {
   turn: StrictColor;
@@ -107,12 +151,12 @@ export class Game {
   enPassantTarget: string | null;
   halfmoveClock: number;
   fullmoveNumber: number;
-  history: Fen[] = [];
-  board: Board;
+  history: Board[] = [];
+  currentBoard: Board;
   enPassentMoveColumn: EnPassentColumn = '-';
 
   constructor() {
-    this.board = createChessBoardFromFen(INIT_POSITION);
+    this.currentBoard = createChessBoardFromFen(INIT_POSITION);
     this.turn = 'white';
     this.castlingRights = BOTH_CAN_CASTLE;
     this.enPassantTarget = null;
@@ -120,30 +164,59 @@ export class Game {
     this.fullmoveNumber = 1;
   }
   setPositionToFen(fen: Fen) {
-    this.board = createChessBoardFromFen(fen);
+    this.currentBoard = createChessBoardFromFen(fen);
   }
 
   //to Fen
   //to Pgn
-  //delete Peace from board & set piece to position
+  //delete Peace from currentBoard & set piece to position
   //rewind position
 
-  move(from: Position, to: Position): MoveConfirmation {
+  move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
     //is turn valid
-    const piece = this.board.find((sq) => sq.row === from.row && sq.column === from.column);
+    const piece = this.currentBoard.find((sq) => sq.row === from.row && sq.column === from.column);
     if (!piece || piece.color !== this.turn) {
       return 'MOVE_INVALID';
     }
 
     //is to in move list
-    const possibleMoves = calculateMoveListForPiece(from, this.board, this.enPassentMoveColumn, this.castlingRights);
-    const validMove = possibleMoves.find((mv) => mv.row === to.row && mv.column === to.column);
+    const possibleMoves = calculateMoveListForPiece(
+      from,
+      this.currentBoard,
+      this.enPassentMoveColumn,
+      this.castlingRights,
+    );
+    const validMove = possibleMoves.find((mv) => mv.row === to.row && mv.column === to.column) ?? null;
 
     //make move
+    if (validMove === null) {
+      return 'MOVE_INVALID';
+    } else {
+      if (promoteTo !== undefined && piece.figure !== 'PAWN' && !validMove.isPromotion) {
+        return 'MOVE_INVALID';
+      }
+      this.currentBoard = makeMoveOnBoard(
+        from,
+        { ...validMove, color: piece.color, figure: piece.figure },
+        this.currentBoard,
+        promoteTo,
+      );
+      this.changeTurn();
+      this.setCastlingRightsAfterMove(piece, from);
+      this.history.push(this.currentBoard);
+      return {
+        from,
+        to,
+        promotionTo: promoteTo,
+      };
+    }
 
     //add move to history
 
     return 'MOVE_INVALID';
+  }
+  changeTurn() {
+    this.turn = this.turn === 'white' ? 'black' : 'white';
   }
 
   setCastlingRightsAfterMove(piece: Piece, from: Position) {
@@ -164,8 +237,6 @@ export class Game {
   rollback(halfmoves: number) {
     for (let i = 0; i < halfmoves; i++) {
       if (this.history.length === 0) break;
-      const lastFen = this.history.pop()!;
-      this.setPositionToFen(lastFen);
       //update turn, castling rights, en passant target, clocks based on fen parsing
       //not implemented yet
     }

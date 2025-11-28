@@ -10,7 +10,7 @@ const oppositeColor = (color: Color): Color => {
   return 'none';
 };
 
-const buildFinalPgnString = (values: string[]) => values.filter((v) => v.length > 0).join('');
+const buildFinalSanString = (values: string[]) => values.filter((v) => v.length > 0).join('');
 
 const buildRookMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x') => {
   const pgnMove: string[] = ['R'];
@@ -45,7 +45,7 @@ const buildRookMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: 
   }
   //is king checked?
   pgnMove.push(`${move.column}${move.row}`);
-  return buildFinalPgnString(pgnMove);
+  return buildFinalSanString(pgnMove);
 };
 
 const buildBishopMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
@@ -77,7 +77,7 @@ const buildBishopMoveSan = (curr: Position, move: Move, board: Board, takeSymbol
   }
   sanMove.push(`${move.column}${move.row}`);
 
-  return buildFinalPgnString(sanMove);
+  return buildFinalSanString(sanMove);
 };
 
 const buildKnightMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
@@ -109,7 +109,7 @@ const buildKnightMoveSan = (curr: Position, move: Move, board: Board, takeSymbol
   }
   sanMove.push(`${move.column}${move.row}`);
 
-  return buildFinalPgnString(sanMove);
+  return buildFinalSanString(sanMove);
 };
 
 const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol: string = 'x'): string => {
@@ -139,7 +139,7 @@ const buildQueenMoveSan = (curr: Position, move: Move, board: Board, takeSymbol:
     sanMove.push(takeSymbol);
   }
   sanMove.push(`${move.column}${move.row}`);
-  return buildFinalPgnString(sanMove);
+  return buildFinalSanString(sanMove);
 };
 
 const buildKingMoveSan = (move: Move, takeSymbol: string = 'x'): string =>
@@ -162,7 +162,7 @@ const buildKingMoveSan = (move: Move, takeSymbol: string = 'x'): string =>
         sanMove.push(takeSymbol);
       }
       sanMove.push(`${move.column}${move.row}`);
-      return buildFinalPgnString(sanMove);
+      return buildFinalSanString(sanMove);
     });
 
 const buildPawnMoveSan = (curr: Position, move: Move, takeSymbol: string = 'x'): string => {
@@ -171,7 +171,7 @@ const buildPawnMoveSan = (curr: Position, move: Move, takeSymbol: string = 'x'):
     sanMove.push(`${curr.column}${takeSymbol}`);
   }
   sanMove.push(`${move.column}${move.row}`);
-  return buildFinalPgnString(sanMove);
+  return buildFinalSanString(sanMove);
 };
 
 //move list of other piece shouldn't overlap
