@@ -1,6 +1,7 @@
 import { Board, Move, Position } from '../../rules/types.ts';
 import { moveToSan } from '../../rules/pgn.ts';
 import { createChessBoardFromFen } from '../../rules/board.ts';
+import { makeMoveOnBoard } from '../../rules/game.ts';
 
 describe('test SAN for rook', () => {
   it('builds correct PGN for rook move without take and same row', () => {
@@ -323,6 +324,20 @@ describe('test SAN for pawn', () => {
     const current: Position = { row: 4, column: 'e' };
     const san = moveToSan(current, move, board);
     expect(san).toBe('exf5');
+  });
+  it('builds correct SAN for enpassent giving checkmate', () => {
+    const board = createChessBoardFromFen('2r3k1/3p4/3N4/6Pp/8/2BB4/5RR1/4K3 w - h6 2 1');
+    const move: Move = {
+      row: 6,
+      column: 'h',
+      color: 'white',
+      figure: 'PAWN',
+      isTaken: true,
+      isTakenEnPassent: true,
+    };
+    const current: Position = { row: 5, column: 'g' };
+    const san = moveToSan(current, move, board);
+    expect(san).toBe('gxh6#');
   });
 });
 
