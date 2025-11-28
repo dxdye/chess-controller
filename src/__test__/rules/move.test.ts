@@ -531,7 +531,7 @@ describe('calculates moves for arbitrary peace', () => {
   it('returns an empty move list if king is checked by knight', () => {
     const initPos = validFenFrom('8/8/2n1p3/5P2/3K4/8/6k1/8 w - - 0 1');
     const board = createChessBoardFromFen(initPos);
-    const movesE1 = calculateMoveListForPiece({ column: 'f', row: 5 }, board);
+    const movesE1 = calculateMoveListForPiece({ column: 'f', row: 5 }, board, '-');
     expect(movesE1).toEqual([]);
   });
   //other tests not necessarily needed, as they are covered by check.test.ts

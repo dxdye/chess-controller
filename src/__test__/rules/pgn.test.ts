@@ -260,6 +260,20 @@ describe('test SAN for knight', () => {
     expect(san).toBe('Nxg7+');
     expect(san2).toBe('Nd6+');
   });
+  it.only('builds correct SAN for knight move giving check 2', () => {
+    const board = createChessBoardFromFen('2r4k/6pp/8/6R1/2B2N2/2B5/8/4K3 w - - 2 1');
+    const current: Position = { row: 4, column: 'f' };
+
+    const move2: Move = {
+      row: 6,
+      column: 'g',
+      color: 'white',
+      figure: 'KNIGHT',
+    };
+
+    const san2 = moveToSan(current, move2, board);
+    expect(san2).toBe('Ng6+');
+  });
   it('builds correct SAN for knight move giving checkmate', () => {
     const board = createChessBoardFromFen('2r4k/6pp/8/6R1/2B2N2/2B5/8/4K2R w K - 2 1');
     const current: Position = { row: 4, column: 'f' };

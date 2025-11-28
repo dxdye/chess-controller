@@ -14,6 +14,7 @@ import { isIndexInBound, isNil } from './helper.ts';
 import { coordinateToPosition, enPassentColumnToIndex } from './transform.ts';
 import { match } from 'ts-pattern';
 import { BLACK_EN_PASSENT_ROW, SECOND_ROW, SEVENTH_ROW, WHITE_EN_PASSENT_ROW } from './constant.ts';
+import { makeMoveOnBoard } from './game.ts';
 
 const includesCastlingRight = (castlingRights: CastlingLetter[], targetRight: CastlingLetter): boolean => {
   return castlingRights.includes(targetRight);
@@ -391,12 +392,8 @@ export const calculateMoveListForPiece = (
     throw new Error('No piece found at the given position');
   }
   const kingIsChecked = isKingChecked(board, piece?.color ?? 'none');
-  if (kingIsChecked && piece?.figure !== 'KING') {
-    return []; //return empty list
-    //only king shall move
-  }
 
-  return match(piece?.figure)
+  const moveList = match(piece?.figure)
     .with('KING', () => calculateMoveListForKing(from, board, kingIsChecked, castlingRights))
     .with('BISHOP', () => calculateMoveListForBishop(from, board))
     .with('KNIGHT', () => calculateMoveListForKnight(from, board))
@@ -406,6 +403,19 @@ export const calculateMoveListForPiece = (
     .otherwise(() => {
       throw new Error('Invalid piece type');
     });
+  //prune moveList if kingIsChecked
+  if (kingIsChecked) {
+    return moveList.filter((move) => {
+      const newBoard = makeMoveOnBoard(
+        from,
+        // might be week
+        { ...move, figure: piece?.figure ?? 'PAWN', color: piece?.color ?? 'none' },
+        board,
+      );
+      return !isKingChecked(newBoard, piece?.color ?? 'none');
+    });
+  }
+  return moveList;
 };
 
 //export const pruneMoveListForCheck = (board: Board, from: Position, moveList: Move[]): Move[] => {
