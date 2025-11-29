@@ -21,4 +21,34 @@ describe('test game from fen', () => {
     expect(game.halfmoveClock).toBe(0);
     expect(game.fullmoveNumber).toBe(10);
   });
+  it('should create game from fen string with no castling rights', () => {
+    const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1';
+    const game = gameFromFen(fen);
+    expect(game.turn).toBe('black');
+    expect(game.currentBoard.length).toBe(32);
+    expect(game.castlingRights).toEqual([]);
+    expect(game.enPassantTarget).toBe('-');
+    expect(game.halfmoveClock).toBe(0);
+    expect(game.fullmoveNumber).toBe(1);
+  });
+  it('should create game with black to move', () => {
+    const fen = 'r1bqkb1r/2pp4/p1n2n1p/Pp1P1pp1/4p3/1PN1P2P/1BP1QPP1/R3KBNR b KQ - 0 10';
+    const game = gameFromFen(fen);
+    expect(game.turn).toBe('black');
+    expect(game.currentBoard.length).toBe(32);
+    expect(game.castlingRights).toEqual(['K', 'Q']);
+    expect(game.enPassantTarget).toBe('-');
+    expect(game.halfmoveClock).toBe(0);
+    expect(game.fullmoveNumber).toBe(10);
+  });
+  it('should create game with less pieces on board', () => {
+    const fen = '2bqkb1r/8/p4n1p/Pp1Pnpp1/4p3/1PN1P2P/1BP1QPP1/4KBNR b K - 0 10';
+    const game = gameFromFen(fen);
+    expect(game.turn).toBe('black');
+    expect(game.currentBoard.length).toBe(28);
+    expect(game.castlingRights).toEqual(['K']);
+    expect(game.enPassantTarget).toBe('-');
+    expect(game.halfmoveClock).toBe(0);
+    expect(game.fullmoveNumber).toBe(10);
+  });
 });
