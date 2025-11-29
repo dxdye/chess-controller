@@ -52,3 +52,15 @@ describe('test game from fen', () => {
     expect(game.fullmoveNumber).toBe(10);
   });
 });
+
+
+//test draw by stalemate
+//test draw by insufficient material
+//test draw by fifty move rule
+//test draw by threefold repetition
+//test checkmate detection
+//test check detection
+//test normal ongoing game detection
+//test game result evaluation for all possible results
+
+//test game from FEN

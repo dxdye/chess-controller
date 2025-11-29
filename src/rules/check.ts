@@ -1,4 +1,4 @@
-import { Board, Color, Position, Direction, BoardPieceMap, Figure, Piece } from './types.ts';
+import { Board, Color, Position, Direction, BoardPieceMap, Figure, Piece, EnPassentColumn } from './types.ts';
 import { boardToPieceMap, positionToCoordinate, getPieceFromPieceMap } from './board.ts';
 import { coordinateToPosition } from './transform.ts';
 import { isIndexInBound, isNil, isNotNil } from './helper.ts';
@@ -144,43 +144,49 @@ export const isKingChecked = (board: Board, kingColor: Color): boolean => {
 };
 
 // this is true, however peaces captures avoiding checkmate are not considered here
-export const isCheckMate = (board: Board, color: Color): boolean => {
+export const isCheckMate = (board: Board, color: Color, enPassentColumn: EnPassentColumn = '-'): boolean => {
   //king has no moves.. and is checked
   const position = findKingPosition(board, color);
   if (position === undefined) {
     throw new Error('King not found on the board');
   } else {
     const kingIsChecked = isKingChecked(board, color);
+    const noPossibleMoveForKing = calculateMoveListForKing(position, board, kingIsChecked).length === 0;
     //other moves could uncheck the king
     //is king still checked after all possible moves?
     //checkmate is only if no move is possible anymore
-    if (kingIsChecked) {
-      const noPossibleMoveForKing = calculateMoveListForKing(position, board, kingIsChecked).length === 0;
-      if (noPossibleMoveForKing) {
-        //check whether move there is a move that can uncheck the king
-        const isNotCheckMate =
-          board
-            .map((piece) => {
-              //other piece of same color
-              if (piece.color === color && piece.figure !== 'KING') {
-                //calculate move list for piece
+    if (!kingIsChecked) {
+      return false;
+    } else {
+      //check whether move there is a move that can uncheck the king
+      const otherMovesPossible =
+        board
+          .map((piece) => {
+            //other piece of same color
+            if (piece.color === color && piece.figure !== 'KING') {
+              //calculate move list for piece
 
-                // already filtered moves that would leave king in check
-                const possibleMoves = calculateMoveListForPiece({ row: piece.row, column: piece.column }, board);
-                //for each move, make move on copy of board and check whether king is still checked
-                return possibleMoves.length > 0;
-              }
-            })
-            .reduce((prev, curr) => prev || curr, false) ?? false;
-        //if no pieces of that color are left, then checkmate
-        return !isNotCheckMate;
-      }
+              // already filtered moves that would leave king in check
+              const possibleMoves = calculateMoveListForPiece(
+                { row: piece.row, column: piece.column },
+                board,
+                enPassentColumn,
+              );
+              //for each move, make move on copy of board and check whether king is still checked
+              return possibleMoves.length > 0;
+            }
+          })
+          .reduce((prev, curr) => prev || curr, false) ?? false;
+      //if no pieces of that color are left, then checkmate
+      return !otherMovesPossible && noPossibleMoveForKing;
     }
-    return false;
   }
 };
 
-export const isStaleMate = (board: Board, color: Color): boolean => {
+export const isStaleMate = (board: Board, color: Color, enPassentColumn: EnPassentColumn = '-'): boolean => {
+  //castling rights are not needed, since there is no way to imagine a case where castling and
+  //stalemate occur at the same time
+
   //king has no moves.. and is not checked
   //king has no moves.. and is checked
   const position = findKingPosition(board, color);
@@ -201,7 +207,11 @@ export const isStaleMate = (board: Board, color: Color): boolean => {
               //calculate move list for piece
 
               // already filtered moves that would leave king in check
-              const possibleMoves = calculateMoveListForPiece({ row: piece.row, column: piece.column }, board);
+              const possibleMoves = calculateMoveListForPiece(
+                { row: piece.row, column: piece.column },
+                board,
+                enPassentColumn,
+              );
               //for each move, make move on copy of board and check whether king is still checked
               return possibleMoves.length > 0;
             }

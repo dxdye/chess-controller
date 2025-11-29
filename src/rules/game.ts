@@ -234,7 +234,7 @@ export class Game {
     this.pgn = [];
   }
 
-  fromFen(fen: Fen) {
+  fromFen(fen: Fen, history: Fen[] = []) {
     const g = gameFromFen(fen);
     this.currentBoard = g.currentBoard;
     this.turn = g.turn;
@@ -245,7 +245,7 @@ export class Game {
     this.drawType = 'NO_DRAW';
     this.gameState = 'ONGOING';
     this.pgn = [];
-    this.history = [];
+    this.history = history;
     this.shortMoveHistory = [];
     this.isThreeFoldRepetition = false;
   }
@@ -321,10 +321,20 @@ export class Game {
   //rollback x halfmoves
   rollback(halfmoves: number) {
     for (let i = 0; i < halfmoves; i++) {
-      if (this.history.length === 0) break;
+      if (this.history.length === 0 || this.fullmoveNumber === 1) break;
       //update turn, castling rights, en passant target, clocks based on fen parsing
       //not implemented yet
     }
+  }
+  takeBackLastMove() {
+    //can not take back if no history or if it's the first move
+    if (this.history.length === 0 || this.fullmoveNumber === 1) return;
+    const lastFen = this.history.pop();
+    if (lastFen) {
+      this.fromFen(lastFen, this.history);
+    }
+
+    this.evaluate();
   }
 
   addCastlingRight(casltingRight: CastlingLetter) {

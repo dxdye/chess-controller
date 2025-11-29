@@ -1,5 +1,5 @@
 import { createChessBoardFromFen } from '../../rules/board.ts';
-import { isKingChecked, isPositionChecked } from '../../rules/check.ts';
+import { isCheckMate, isKingChecked, isPositionChecked, isStaleMate } from '../../rules/check.ts';
 import { INIT_POSITION } from '../../rules/constant.ts';
 describe('King is checked', () => {
   it('proves that black king on h8 is checked in bishop direction (by queen and bishop)', () => {
@@ -126,4 +126,64 @@ describe('King is checked', () => {
     expect(resPos).toBe(true);
     expect(resPos2).toBe(false);
   });
+  it('validates that king is not checked in following position', () => {
+    const board = createChessBoardFromFen('8/6K1/3Q3Q/5k2/7p/4pP2/8/8 w - - 0 2');
+    const res = isKingChecked(board, 'black');
+    expect(res).toBe(false);
+  });
 });
+
+describe('King is stalemated', () => {
+  it('validates that black king is stalemated', () => {
+    const board = createChessBoardFromFen('8/6K1/8/7k/7p/7P/6Q1/8 b - - 0 1');
+    const res = isStaleMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates that black king is stalemated, respecting the bound piece', () => {
+    const board = createChessBoardFromFen('8/6K1/8/7k/7b/7R/6Q1/8 b - - 0 1');
+    const res = isStaleMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates that black king is stalemated, only move left would be a capture', () => {
+    const board2 = createChessBoardFromFen('8/6K1/8/7k/5Q1p/6PR/8/8 b - - 0 1');
+    const res2 = isStaleMate(board2, 'black');
+    expect(res2).toBe(true);
+  });
+  it('validates that black king is not stalemated, left with moving the bishop', () => {
+    const board = createChessBoardFromFen('8/6K1/8/7k/7b/8/6Q1/8 b - - 0 1');
+    const res = isStaleMate(board, 'black');
+    expect(res).toBe(false);
+  });
+  it('validates that black king is not stalemated, only move left is pawn capture', () => {
+    const board = createChessBoardFromFen('8/6K1/8/7k/5Q1p/6P1/8/8 b - - 0 1');
+    const res = isStaleMate(board, 'black');
+    expect(res).toBe(false);
+  });
+  it('validates that black king is not stalemated, only move left is en passent', () => {
+    const board = createChessBoardFromFen('k7/6K1/1Q6/8/6Pp/7P/8/8 b - g3 0 1');
+    const board2 = createChessBoardFromFen('k7/6K1/1Q1Q3Q/8/4Pp1p/5P2/8/8 b - e3 0 1');
+    const res = isStaleMate(board, 'black', 'g');
+    const res2 = isStaleMate(board2, 'black', 'e');
+    expect(res).toBe(false);
+    expect(res2).toBe(false);
+  });
+});
+
+describe('King is checkmated', () => {
+  it('validates that black king is checkmated by rook(row) and queen', () => {
+    const board = createChessBoardFromFen('k3R3/6K1/1Q6/8/6pp/6pp/8/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates that black king is checkmated by rook(column) and queen', () => {
+    const board = createChessBoardFromFen('k7/6K1/1Q6/8/R5pp/6pp/8/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates that checkmate fails, due to enpassent move ', () => {
+    const board = createChessBoardFromFen('8/6K1/3Q3Q/5k2/4Pp1p/5P2/8/8 b - e3 0 1');
+    const res = isCheckMate(board, 'black', 'e');
+    expect(res).toBe(false);
+  });
+});
+
