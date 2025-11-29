@@ -188,7 +188,28 @@ export const isStaleMate = (board: Board, color: Color): boolean => {
     throw new Error('King not found on the board');
   } else {
     const kingIsntChecked = !isKingChecked(board, color);
-    return calculateMoveListForKing(position, board, kingIsntChecked).length === 0;
+    const noPossibleMoveForKing = calculateMoveListForKing(position, board, kingIsntChecked).length === 0;
+    if (!noPossibleMoveForKing) {
+      return false;
+    } else {
+      //check whether other moves are possible
+      const otherMovesPossible =
+        board
+          .map((piece) => {
+            //other piece of same color
+            if (piece.color === color && piece.figure !== 'KING') {
+              //calculate move list for piece
+
+              // already filtered moves that would leave king in check
+              const possibleMoves = calculateMoveListForPiece({ row: piece.row, column: piece.column }, board);
+              //for each move, make move on copy of board and check whether king is still checked
+              return possibleMoves.length > 0;
+            }
+          })
+          .reduce((prev, curr) => prev || curr, false) ?? false;
+
+      return kingIsntChecked && !otherMovesPossible;
+    }
   }
 };
 

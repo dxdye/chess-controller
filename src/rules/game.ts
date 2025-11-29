@@ -1,5 +1,3 @@
-//i8n
-
 import { match } from 'ts-pattern';
 import { createChessBoardFromFen } from './board.ts';
 import { BOTH_CAN_CASTLE, INIT_POSITION } from './constant.ts';
@@ -164,6 +162,14 @@ export const gameToFen = (game: Game): Fen => {
 };
 
 export class Game {
+  //tasks for later:
+  //i8n and custom move notation support
+  //note: that optimization could use hashmaps for the moveLists and pass it
+  //to the checkmate, stalemate etc. functions to reuse..
+  //to avoid multiple calculations of same move lists
+  //also caching whether king is checked or not should be useful
+  //also for some code beauty - why not reduce the boilerplate code
+
   currentBoard: Board = createChessBoardFromFen(INIT_POSITION);
   turn: StrictColor = 'white';
   castlingRights: CastlingLetter[] = BOTH_CAN_CASTLE;
