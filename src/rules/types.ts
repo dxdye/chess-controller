@@ -26,13 +26,26 @@ export type MoveProperties = {
 };
 export type DestMove = Position & MoveProperties; //extra info for move
 export type Move = DestMove & Square; //move with source position
+
+export type DrawTypes =
+  | 'DRAW_BY_AGREEMENT'
+  | 'DRAW_BY_INSUFFICIENT_MATERIAL'
+  | 'DRAW_BY_STALEMATE'
+  | 'DRAW_BY_FIFTY_MOVE_RULE'
+  | 'DRAW_BY_THREEFOLD_REPETITION'
+  | 'NO_DRAW';
+export type GameState = 'ONGOING' | 'CHECKMATE' | 'DRAWN';
+
 export type MoveConfirmation =
   | ({
       from: Position;
       to: Position;
       promotionTo?: Figure;
     } & MoveProperties)
-  | 'MOVE_INVALID';
+  | DrawTypes
+  | 'MOVE_INVALID'
+  | 'CHECKMATE';
+
 
 export type Piece = {
   color: Color;

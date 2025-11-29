@@ -9,6 +9,10 @@ export function isNotNil<T>(value?: T): value is NonNullable<T> {
 export const isIndexInBound = (index: number): boolean => index > 0 && index <= 8; //index from 1..8
 
 
+export const removeDuplicatesFromArray = <T>(arr: T[]): T[] => {
+  return Array.from(new Set(arr));
+};
+
 export const Maybe = <T>(val: T) => {
   return {
     isNothing: () => isNil(val),
