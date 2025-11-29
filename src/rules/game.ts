@@ -13,8 +13,10 @@ import { BOTH_CAN_CASTLE, INIT_POSITION } from './constant.ts';
 import {
   Board,
   CastlingLetter,
+  DrawTypes,
   EnPassentColumn,
   Fen,
+  GameState,
   Move,
   MoveConfirmation,
   Piece,
@@ -24,12 +26,15 @@ import {
 } from './types.ts';
 import { calculateMoveListForPiece } from './move.ts';
 import {
+  createFenFromChessBoard,
   extractActiveColorFromFen,
   extractCastlingRightsFromFen,
   extractEnPassentTargetFromFen,
   extractHalfmoveClockFromFen,
   extractMoveCountFromFen,
+  validFenFrom,
 } from './fen.ts';
+import { removeDuplicatesFromArray } from './helper.ts';
 
 const castlingRightsActions = {
   //remove castling rights after king or rook move
@@ -145,6 +150,21 @@ export const gameFromFen = (fen: Fen): Game => {
   return game;
 };
 
+export const gameToFen = (game: Game): Fen => {
+  const piecePlacement: string = createFenFromChessBoard(game.currentBoard);
+  const activeColor: string = game.turn === 'white' ? 'w' : 'b';
+  const castlingRights: string =
+    game.castlingRights.length === 0 ? '-' : removeDuplicatesFromArray(game.castlingRights).sort().join('');
+  const enPassentTarget: string =
+    (game.enPassantTarget ?? '-') +
+    (game.enPassantTarget !== null && game.enPassantTarget !== '-' ? (game.turn === 'white' ? '6' : '3') : '');
+  const halfmoveClock: string = game.halfmoveClock.toString();
+  const fullmoveNumber: string = game.fullmoveNumber.toString();
+
+  const result = `${piecePlacement} ${activeColor} ${castlingRights} ${enPassentTarget} ${halfmoveClock} ${fullmoveNumber}`;
+  return validFenFrom(result);
+};
+
 export class Game {
   turn: StrictColor;
   castlingRights: CastlingLetter[];
@@ -154,6 +174,12 @@ export class Game {
   history: Board[] = [];
   currentBoard: Board;
   enPassentMoveColumn: EnPassentColumn = '-';
+  private isThreeFoldRepetition: boolean = false;
+
+  gameState: GameState = 'ONGOING';
+  drawType: DrawTypes = 'NO_DRAW';
+
+  pgn: string[] = [];
 
   constructor() {
     this.currentBoard = createChessBoardFromFen(INIT_POSITION);
@@ -171,6 +197,11 @@ export class Game {
   //to Pgn
   //delete Peace from currentBoard & set piece to position
   //rewind position
+
+  agreeToDraw() {
+    this.gameState = 'DRAWN';
+    this.drawType = 'DRAW_BY_AGREEMENT';
+  }
 
   move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
     //is turn valid
@@ -203,6 +234,8 @@ export class Game {
       );
       this.changeTurn();
       this.setCastlingRightsAfterMove(piece, from);
+      //check for draw
+
       this.history.push(this.currentBoard);
       return {
         from,
@@ -210,10 +243,6 @@ export class Game {
         promotionTo: promoteTo,
       };
     }
-
-    //add move to history
-
-    return 'MOVE_INVALID';
   }
   changeTurn() {
     this.turn = this.turn === 'white' ? 'black' : 'white';
@@ -228,9 +257,8 @@ export class Game {
     }
   }
 
-  currentGameToFen(): Fen {
-    //not implemented yet
-    return INIT_POSITION;
+  private currentGameToFen(): Fen {
+    return gameToFen(this);
   }
 
   //rollback x halfmoves

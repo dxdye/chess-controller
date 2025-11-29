@@ -1,6 +1,6 @@
 import { INIT_POSITION } from './constant.ts';
 import { isNil } from './helper.ts';
-import { Fen, Board, Color, CastlingLetter, CastlingLetters, EnPassentColumn, StrictColor } from './types.ts';
+import { Fen, Board, CastlingLetter, CastlingLetters, EnPassentColumn, StrictColor } from './types.ts';
 import { figureToLetter } from './transform.ts';
 
 const validFen =
