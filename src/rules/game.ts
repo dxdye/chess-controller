@@ -1,11 +1,4 @@
-//castling stuff to be implemented
-//promotion to be implemented
-//is draw  by insufficient material to be implemented
-//is draw by 50 move rule to be implemented
-//is draw by threefold repetition to be implemented
-//is draw by dead position to be implemented
-//i8n 
-//pgn generation
+//i8n
 
 import { match } from 'ts-pattern';
 import { createChessBoardFromFen } from './board.ts';
@@ -38,6 +31,7 @@ import {
 import { removeDuplicatesFromArray } from './helper.ts';
 import { columnToIndex } from './transform.ts';
 import { isStaleMate } from './check.ts';
+import { moveToSan } from './pgn.ts';
 
 const castlingRightsActions = {
   //remove castling rights after king or rook move
@@ -169,20 +163,27 @@ export const gameToFen = (game: Game): Fen => {
 };
 
 export class Game {
+  currentBoard: Board = createChessBoardFromFen(INIT_POSITION);
   turn: StrictColor = 'white';
   castlingRights: CastlingLetter[] = BOTH_CAN_CASTLE;
+
+  //clocks
   halfmoveClock: number = 0;
   fullmoveNumber: number = 1;
-  history: Fen[] = [];
-  currentBoard: Board = createChessBoardFromFen(INIT_POSITION);
+
+  //en passent target column
   enPassantTarget: EnPassentColumn = '-';
+
+  //history
   shortMoveHistory: Move[] = [];
-  private isThreeFoldRepetition: boolean = false;
+  history: Fen[] = [];
 
   gameState: GameState = 'ONGOING';
   drawType: DrawTypes = 'NO_DRAW';
 
   pgn: string[] = [];
+
+  private isThreeFoldRepetition: boolean = false;
 
   constructor() {
     this.newGame();
@@ -197,20 +198,25 @@ export class Game {
     this.fullmoveNumber = 1;
     this.history = [];
     this.gameState = 'ONGOING';
+    this.drawType = 'NO_DRAW';
+    this.shortMoveHistory = [];
+    this.isThreeFoldRepetition = false;
+    this.pgn = [];
   }
 
+  fromFen(fen: Fen) {
+    const g = gameFromFen(fen);
+    this.currentBoard = g.currentBoard;
+    this.turn = g.turn;
+    this.castlingRights = g.castlingRights;
+    this.enPassantTarget = g.enPassantTarget;
+    this.halfmoveClock = g.halfmoveClock;
+    this.fullmoveNumber = g.fullmoveNumber;
+    this.drawType = 'NO_DRAW';
+    this.gameState = 'ONGOING';
+  }
   setPositionToFen(fen: Fen) {
     this.currentBoard = createChessBoardFromFen(fen);
-  }
-
-  //to Fen
-  //to Pgn
-  //delete Peace from currentBoard & set piece to position
-  //rewind position
-
-  agreeToDraw() {
-    this.gameState = 'DRAWN';
-    this.drawType = 'DRAW_BY_AGREEMENT';
   }
 
   move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
@@ -239,18 +245,14 @@ export class Game {
       if (promoteTo !== undefined && piece.figure !== 'PAWN' && !validMove.isPromotion) {
         return 'MOVE_INVALID';
       }
+      const fullValidMove: Move = { ...validMove, color: piece.color, figure: piece.figure };
 
       // add game to history
       this.history.push(this.currentGameToFen());
-      this.addToShortHistory({ ...validMove, color: piece.color, figure: piece.figure });
+      this.addToShortHistory(fullValidMove);
 
       // make move on board
-      this.currentBoard = makeMoveOnBoard(
-        from,
-        { ...validMove, color: piece.color, figure: piece.figure },
-        this.currentBoard,
-        promoteTo,
-      );
+      this.currentBoard = makeMoveOnBoard(from, fullValidMove, this.currentBoard, promoteTo);
       this.changeTurn();
       this.setCastlingRightsAfterMove(piece, from);
 
@@ -264,19 +266,12 @@ export class Game {
       if (!promoteTo && this.isThreeFoldRepetition) {
         return 'OFFER_DRAW';
       }
+      //add move to PGN
+      this.pgn.push(moveToSan(from, fullValidMove, this.currentBoard));
+      //yes, there are multiple calls of isKingChecked in this procedure
 
-      return {
-        from,
-        to,
-        promotionTo: promoteTo,
-      };
+      return { from, to, promotionTo: promoteTo };
     }
-  }
-
-  setDrawAfterThreefoldRepetition() {
-    if (!this.isThreeFoldRepetition) throw new Error('Threefold repetition condition not met');
-    this.gameState = 'DRAWN';
-    this.drawType = 'DRAW_BY_THREEFOLD_REPETITION';
   }
 
   setCastlingRightsAfterMove(piece: Piece, from: Position) {
@@ -304,10 +299,19 @@ export class Game {
   }
 
   checkForDraw() {
-    if (this.gameState === 'DRAWN') return;
+    if (this.gameState !== 'ONGOING') return;
     if (this.checkInsufficientMaterial()) return;
     if (this.checkStalemate()) return;
     if (this.checkFiftyMoveRule()) return;
+  }
+  agreeToDraw() {
+    this.gameState = 'DRAWN';
+    this.drawType = 'DRAW_BY_AGREEMENT';
+  }
+  setDrawAfterThreefoldRepetition() {
+    if (!this.isThreeFoldRepetition) throw new Error('Threefold repetition condition not met');
+    this.gameState = 'DRAWN';
+    this.drawType = 'DRAW_BY_THREEFOLD_REPETITION';
   }
 
   //private methods
@@ -447,4 +451,4 @@ export class Game {
       this.isThreeFoldRepetition = false;
     }
   }
-};
+}
