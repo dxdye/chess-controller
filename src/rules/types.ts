@@ -42,9 +42,10 @@ export type MoveConfirmation =
       to: Position;
       promotionTo?: Figure;
     } & MoveProperties)
-  | DrawTypes
+  | 'GAME_DRAWN'
+  | 'OFFER_DRAW'
   | 'MOVE_INVALID'
-  | 'CHECKMATE';
+  | 'GAME_OVER';
 
 
 export type Piece = {

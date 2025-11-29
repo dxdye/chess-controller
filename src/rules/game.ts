@@ -22,6 +22,7 @@ import {
   Piece,
   Position,
   PromotionFigure,
+  Square,
   StrictColor,
 } from './types.ts';
 import { calculateMoveListForPiece } from './move.ts';
@@ -35,6 +36,8 @@ import {
   validFenFrom,
 } from './fen.ts';
 import { removeDuplicatesFromArray } from './helper.ts';
+import { columnToIndex } from './transform.ts';
+import { isStaleMate } from './check.ts';
 
 const castlingRightsActions = {
   //remove castling rights after king or rook move
@@ -166,14 +169,14 @@ export const gameToFen = (game: Game): Fen => {
 };
 
 export class Game {
-  turn: StrictColor;
-  castlingRights: CastlingLetter[];
-  enPassantTarget: string | null;
-  halfmoveClock: number;
-  fullmoveNumber: number;
-  history: Board[] = [];
-  currentBoard: Board;
-  enPassentMoveColumn: EnPassentColumn = '-';
+  turn: StrictColor = 'white';
+  castlingRights: CastlingLetter[] = BOTH_CAN_CASTLE;
+  halfmoveClock: number = 0;
+  fullmoveNumber: number = 1;
+  history: Fen[] = [];
+  currentBoard: Board = createChessBoardFromFen(INIT_POSITION);
+  enPassantTarget: EnPassentColumn = '-';
+  shortMoveHistory: Move[] = [];
   private isThreeFoldRepetition: boolean = false;
 
   gameState: GameState = 'ONGOING';
@@ -182,13 +185,20 @@ export class Game {
   pgn: string[] = [];
 
   constructor() {
+    this.newGame();
+  }
+
+  newGame() {
     this.currentBoard = createChessBoardFromFen(INIT_POSITION);
     this.turn = 'white';
     this.castlingRights = BOTH_CAN_CASTLE;
-    this.enPassantTarget = null;
+    this.enPassantTarget = '-';
     this.halfmoveClock = 0;
     this.fullmoveNumber = 1;
+    this.history = [];
+    this.gameState = 'ONGOING';
   }
+
   setPositionToFen(fen: Fen) {
     this.currentBoard = createChessBoardFromFen(fen);
   }
@@ -204,6 +214,14 @@ export class Game {
   }
 
   move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
+    this.checkForDraw();
+    if (this.gameState === 'DRAWN') {
+      return 'GAME_DRAWN';
+    }
+    if (this.gameState === 'CHECKMATE') {
+      return 'GAME_OVER';
+    }
+
     //is turn valid
     const piece = this.currentBoard.find((sq) => sq.row === from.row && sq.column === from.column);
     if (!piece || piece.color !== this.turn) {
@@ -211,12 +229,7 @@ export class Game {
     }
 
     //is to in move list
-    const possibleMoves = calculateMoveListForPiece(
-      from,
-      this.currentBoard,
-      this.enPassentMoveColumn,
-      this.castlingRights,
-    );
+    const possibleMoves = calculateMoveListForPiece(from, this.currentBoard, this.enPassantTarget, this.castlingRights);
     const validMove = possibleMoves.find((mv) => mv.row === to.row && mv.column === to.column) ?? null;
 
     //make move
@@ -226,6 +239,12 @@ export class Game {
       if (promoteTo !== undefined && piece.figure !== 'PAWN' && !validMove.isPromotion) {
         return 'MOVE_INVALID';
       }
+
+      // add game to history
+      this.history.push(this.currentGameToFen());
+      this.addToShortHistory({ ...validMove, color: piece.color, figure: piece.figure });
+
+      // make move on board
       this.currentBoard = makeMoveOnBoard(
         from,
         { ...validMove, color: piece.color, figure: piece.figure },
@@ -234,9 +253,18 @@ export class Game {
       );
       this.changeTurn();
       this.setCastlingRightsAfterMove(piece, from);
-      //check for draw
 
-      this.history.push(this.currentBoard);
+      //increment clocks
+      this.incrementHalfmoveClock(piece.figure === 'PAWN', validMove.isTaken ?? false);
+      this.incrementFullmoveNumber();
+
+      //check for threefold repetition
+      this.checkThreeFoldRepetition();
+
+      if (!promoteTo && this.isThreeFoldRepetition) {
+        return 'OFFER_DRAW';
+      }
+
       return {
         from,
         to,
@@ -244,8 +272,11 @@ export class Game {
       };
     }
   }
-  changeTurn() {
-    this.turn = this.turn === 'white' ? 'black' : 'white';
+
+  setDrawAfterThreefoldRepetition() {
+    if (!this.isThreeFoldRepetition) throw new Error('Threefold repetition condition not met');
+    this.gameState = 'DRAWN';
+    this.drawType = 'DRAW_BY_THREEFOLD_REPETITION';
   }
 
   setCastlingRightsAfterMove(piece: Piece, from: Position) {
@@ -255,10 +286,6 @@ export class Game {
     } else if (piece.figure === 'ROOK') {
       this.castlingRights = castlingRightsActions.ROOK[strictColor](this.castlingRights)(from);
     }
-  }
-
-  private currentGameToFen(): Fen {
-    return gameToFen(this);
   }
 
   //rollback x halfmoves
@@ -273,6 +300,151 @@ export class Game {
   addCastlingRight(casltingRight: CastlingLetter) {
     if (!this.castlingRights.includes(casltingRight)) {
       this.castlingRights.push(casltingRight);
+    }
+  }
+
+  checkForDraw() {
+    if (this.gameState === 'DRAWN') return;
+    if (this.checkInsufficientMaterial()) return;
+    if (this.checkStalemate()) return;
+    if (this.checkFiftyMoveRule()) return;
+  }
+
+  //private methods
+  private changeTurn() {
+    this.turn = this.turn === 'white' ? 'black' : 'white';
+  }
+  private currentGameToFen(): Fen {
+    return gameToFen(this);
+  }
+  private addToShortHistory(move: Move) {
+    this.shortMoveHistory.push(move);
+    //keep only last 6 moves
+    if (this.shortMoveHistory.length > 6) {
+      this.shortMoveHistory = this.shortMoveHistory.slice(-6);
+    }
+  }
+
+  private incrementHalfmoveClock(isPawnMove: boolean, isCapture: boolean) {
+    if (isPawnMove || isCapture) {
+      this.halfmoveClock = 0;
+    } else {
+      ++this.halfmoveClock;
+    }
+  }
+
+  private incrementFullmoveNumber() {
+    if (this.turn === 'black' && this.history.length % 2 === 0) {
+      ++this.fullmoveNumber;
+    }
+  }
+
+  private checkStalemate() {
+    if (isStaleMate(this.currentBoard, this.turn)) {
+      this.gameState = 'DRAWN';
+      this.drawType = 'DRAW_BY_STALEMATE';
+      return true;
+    }
+    return false;
+  }
+  private checkFiftyMoveRule() {
+    if (this.halfmoveClock >= 50) {
+      this.gameState = 'DRAWN';
+      this.drawType = 'DRAW_BY_FIFTY_MOVE_RULE';
+      return true;
+    }
+    return false;
+  }
+  private checkInsufficientMaterial() {
+    const figuresOnBoard = this.currentBoard.map((sq) => sq.figure);
+    const uniqueFigures = removeDuplicatesFromArray(figuresOnBoard);
+
+    //only kings
+    if (uniqueFigures.length === 1 && uniqueFigures[0] === 'KING') {
+      this.gameState = 'DRAWN';
+      this.drawType = 'DRAW_BY_INSUFFICIENT_MATERIAL';
+      return true;
+    }
+
+    //king vs king and bishop/knight
+    if (
+      uniqueFigures.length === 2 &&
+      uniqueFigures.includes('KING') &&
+      (uniqueFigures.includes('BISHOP') || uniqueFigures.includes('KNIGHT')) &&
+      this.currentBoard.length === 3
+    ) {
+      this.gameState = 'DRAWN';
+      this.drawType = 'DRAW_BY_INSUFFICIENT_MATERIAL';
+      return true;
+    }
+
+    //king and bishop vs king and bishop (same color bishops)
+    if (uniqueFigures.length === 2 && uniqueFigures.includes('KING') && this.currentBoard.length === 4) {
+      const otherPieces = this.currentBoard.filter((sq) => !(sq.figure === 'KING'));
+      const onlyBishops = otherPieces.every((sq) => sq.figure === 'BISHOP');
+
+      const sameColorBishops = (bp1?: Square, bp2?: Square): boolean => {
+        if (bp1 === undefined || bp2 === undefined) return false;
+        const bishop1SquareColor =
+          (bp1.color === 'white'
+            ? (bp1.row + columnToIndex(bp1.column)) % 2
+            : (bp1.row + columnToIndex(bp1.column) + 1) % 2) === 0
+            ? 'light'
+            : 'dark';
+        const bishop2SquareColor =
+          (bp2.color === 'white'
+            ? (bp2.row + columnToIndex(bp2.column)) % 2
+            : (bp2.row + columnToIndex(bp2.column) + 1) % 2) === 0
+            ? 'light'
+            : 'dark';
+        return bishop1SquareColor === bishop2SquareColor;
+      };
+
+      if (
+        onlyBishops &&
+        otherPieces.length === 2 &&
+        otherPieces[0]?.figure === otherPieces[1]?.figure &&
+        //are they of different color
+        otherPieces[0]?.color !== otherPieces[1]?.color &&
+        sameColorBishops(otherPieces[0], otherPieces[1])
+      ) {
+        this.gameState = 'DRAWN';
+        this.drawType = 'DRAW_BY_INSUFFICIENT_MATERIAL';
+        return true;
+      }
+    }
+    return false;
+  }
+  private checkThreeFoldRepetition() {
+    if (this.shortMoveHistory.length < 6) {
+      this.isThreeFoldRepetition = false;
+      return;
+    }
+
+    const lastThreeMoves = this.shortMoveHistory.slice(-6);
+    const lastMove = lastThreeMoves[lastThreeMoves.length - 1];
+
+    if (!lastMove) return;
+
+    const occurrencesOpponentMove = this.shortMoveHistory.filter(
+      (mv) =>
+        mv.column === lastMove.column &&
+        mv.row === lastMove.row &&
+        mv.figure === lastMove.figure &&
+        mv.color === lastMove.color,
+    ).length;
+    const occurrencesPlayerMove = this.shortMoveHistory.filter(
+      (mv) =>
+        mv.column === lastMove.column &&
+        mv.row === lastMove.row &&
+        mv.figure === lastMove.figure &&
+        mv.color !== lastMove.color,
+    ).length;
+
+    if (occurrencesOpponentMove >= 3 && occurrencesPlayerMove >= 3) {
+      this.isThreeFoldRepetition = true;
+    } else {
+      this.isThreeFoldRepetition = false;
     }
   }
 };
