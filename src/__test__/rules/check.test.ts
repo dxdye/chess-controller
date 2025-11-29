@@ -180,9 +180,57 @@ describe('King is checkmated', () => {
     const res = isCheckMate(board, 'black');
     expect(res).toBe(true);
   });
+  it('validates smuddered checkmate by knight', () => {
+    const board = createChessBoardFromFen('6nk/5Npp/8/8/8/8/6K1/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates smuddered checkmate by knight and pinned piece', () => {
+    const board = createChessBoardFromFen('1R4bk/5Npp/8/8/8/8/6K1/8 b - - 0 1');
+    const board2 = createChessBoardFromFen('6bk/6pp/6N1/8/8/8/6KR/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    const res2 = isCheckMate(board2, 'black');
+    expect(res).toBe(true);
+    expect(res2).toBe(true);
+  });
+  it('validates smuddered mate not valid, since bishop can capture', () => {
+    const board = createChessBoardFromFen('6bk/5Npp/8/8/8/8/6K1/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(false);
+  });
+  it('validate checkmate by double check', () => {
+    const board = createChessBoardFromFen('7k/8/8/6K1/8/1BB3p1/7Q/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(true);
+  });
+  it('validates that black king is checkmated since the pieces can not be captured', () => {
+    const board = createChessBoardFromFen('8/8/4R3/5k2/6Q1/4K3/8/6R1 w - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(true);
+  });
   it('validates that checkmate fails, due to enpassent move ', () => {
     const board = createChessBoardFromFen('8/6K1/3Q3Q/5k2/4Pp1p/5P2/8/8 b - e3 0 1');
     const res = isCheckMate(board, 'black', 'e');
+    expect(res).toBe(false);
+  });
+  it('is not a checkmate, because the attacker can be captured', () => {
+    const board = createChessBoardFromFen('7k/8/8/6K1/8/1B4p1/7Q/8 b - - 0 1');
+    const res = isCheckMate(board, 'black', 'e');
+    expect(res).toBe(false);
+  });
+  it('shows that it is simply not checkmate, since king not in check', () => {
+    const board = createChessBoardFromFen('6b1/6pp/2k5/8/8/8/6KR/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(false);
+  });
+  it('shows that it is simply not checkmate, since king has escape square', () => {
+    const board = createChessBoardFromFen('7k/8/6K1/8/8/8/7Q/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
+    expect(res).toBe(false);
+  });
+  it('shows that stalemate is not checkmate', () => {
+    const board = createChessBoardFromFen('8/6K1/8/7k/7p/7R/6Q1/8 b - - 0 1');
+    const res = isCheckMate(board, 'black');
     expect(res).toBe(false);
   });
 });

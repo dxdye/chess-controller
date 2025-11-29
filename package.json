@@ -15,8 +15,8 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "fmt": "prettier . --write",
-    "test": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts --silent=false",
-    "test:rules": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/*",
+    "test": "NODE_NO_WARNINGS=1 node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts --silent=false",
+    "test:rules": "NODE_NO_WARNINGS=1 node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/*",
     "test:rules::check": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/check.test.ts",
     "test:rules::move": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/move.test.ts",
     "test:rules::pgn": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/pgn.test.ts"
