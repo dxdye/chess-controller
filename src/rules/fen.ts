@@ -1,5 +1,5 @@
 import { INIT_POSITION } from './constant.ts';
-import { isNil } from './helper.ts';
+import { isNil, removeDuplicatesFromArray } from './helper.ts';
 import { Fen, Board, CastlingLetter, CastlingLetters, EnPassentColumn, StrictColor } from './types.ts';
 import { figureToLetter } from './transform.ts';
 
@@ -65,7 +65,9 @@ export const extractCastlingRightsFromFen = (position: Fen): CastlingLetter[] =>
   if (parts.length < 3) throw new Error('Invalid Fen string: no denoted castling rights');
   const castlingPart = parts[2] ?? '-';
   if (castlingPart === '-') return [];
-  return castlingPart.split('').filter((c): c is CastlingLetter => (CastlingLetters as readonly string[]).includes(c));
+  return removeDuplicatesFromArray(
+    castlingPart.split('').filter((c): c is CastlingLetter => (CastlingLetters as readonly string[]).includes(c)),
+  );
 };
 export const extractEnPassentTargetFromFen = (position: Fen): EnPassentColumn => {
   const parts = position.split(' ');

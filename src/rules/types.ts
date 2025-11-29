@@ -35,6 +35,7 @@ export type DrawTypes =
   | 'DRAW_BY_THREEFOLD_REPETITION'
   | 'NO_DRAW';
 export type GameState = 'ONGOING' | 'CHECKMATE' | 'DRAWN';
+export type GameResult = 'WHITE_WINS' | 'BLACK_WINS' | 'DRAW' | '-';
 
 export type MoveConfirmation =
   | ({

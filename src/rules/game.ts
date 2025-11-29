@@ -9,6 +9,7 @@ import {
   DrawTypes,
   EnPassentColumn,
   Fen,
+  GameResult,
   GameState,
   Move,
   MoveConfirmation,
@@ -189,6 +190,29 @@ export class Game {
     this.newGame();
   }
 
+  evaluate(writeToPgn?: boolean): GameResult {
+    if (this.gameState === 'DRAWN') {
+      if (writeToPgn) {
+        this.pgn.push('1/2-1/2');
+      }
+      return 'DRAW';
+    }
+    if (this.gameState === 'CHECKMATE') {
+      if (this.turn === 'white') {
+        if (writeToPgn) {
+          this.pgn.push('0-1');
+        }
+        return 'BLACK_WINS';
+      } else {
+        if (writeToPgn) {
+          this.pgn.push('1-0');
+        }
+        return 'WHITE_WINS';
+      }
+    }
+    return '-';
+  }
+
   newGame() {
     this.currentBoard = createChessBoardFromFen(INIT_POSITION);
     this.turn = 'white';
@@ -214,7 +238,12 @@ export class Game {
     this.fullmoveNumber = g.fullmoveNumber;
     this.drawType = 'NO_DRAW';
     this.gameState = 'ONGOING';
+    this.pgn = [];
+    this.history = [];
+    this.shortMoveHistory = [];
+    this.isThreeFoldRepetition = false;
   }
+
   setPositionToFen(fen: Fen) {
     this.currentBoard = createChessBoardFromFen(fen);
   }
