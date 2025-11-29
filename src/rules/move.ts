@@ -297,7 +297,8 @@ export const calculateMoveListForKing = (
 export const calculateMoveListForPawn = (
   from: Position,
   board: Board,
-  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // allows en passent
+  //maybe rename later to previousTwoStepPawnMoveColumn
+  enPassentColumn: EnPassentColumn = '-', // allows en passent
 ): Move[] => {
   const color = board.find((square) => square.row === from.row && square.column === from.column)?.color ?? 'none';
   if (color === 'none') {
@@ -329,7 +330,7 @@ export const calculateMoveListForPawn = (
     const updatedColumn = current[1] + direction.col;
 
     const inBound = isIndexInBound(updatedRow) && isIndexInBound(updatedColumn);
-
+    let enPassentCapture: boolean = false;
     if (!inBound)
       addToMoves = false; //don't add to move if out of bounds
     else {
@@ -343,19 +344,23 @@ export const calculateMoveListForPawn = (
       const pawnTakesOtherPiece = direction.col !== 0 && !isPawnCaptureBlocked(boardColorMap, updatedPosition, color);
 
       //check for en passent move
-      const enpassentCapture =
+      enPassentCapture =
         direction.col !== 0 &&
         isPathEmpty(boardColorMap, updatedPosition) &&
-        updatedColumn === enPassentColumnToIndex(hasPreviousTwoStepPawnMove) && //must be on the correct column
-        hasPreviousTwoStepPawnMove &&
+        updatedColumn === enPassentColumnToIndex(enPassentColumn) && //must be on the correct column
+        enPassentColumn !== '-' &&
         ((color === 'white' && from.row === WHITE_EN_PASSENT_ROW) ||
           (color === 'black' && from.row === BLACK_EN_PASSENT_ROW)); //pawn must be on 5th (white) or 4th (black) row
 
-      addToMoves = pawnTakesOtherPiece || forwardMoveNotBlocked || enpassentCapture;
-      takesOtherPiece = pawnTakesOtherPiece || enpassentCapture;
+      addToMoves = pawnTakesOtherPiece || forwardMoveNotBlocked || enPassentCapture;
+      takesOtherPiece = pawnTakesOtherPiece || enPassentCapture;
     }
     if (addToMoves) {
-      moves.push({ ...coordinateToPosition(updatedColumn, updatedRow), isTaken: takesOtherPiece });
+      moves.push({
+        ...coordinateToPosition(updatedColumn, updatedRow),
+        isTaken: takesOtherPiece,
+        isTakenEnPassent: enPassentCapture,
+      });
     }
   });
 
@@ -376,6 +381,7 @@ export const calculateMoveListForPawn = (
       moves.push({
         ...coordinateToPosition(updatedColumn, updatedRow),
         isTaken: false,
+        isTakenEnPassent: false,
       });
     }
   }
@@ -386,9 +392,10 @@ export const calculateMoveListForPawn = (
 export const calculateMoveListForPiece = (
   from: Position,
   board: Board,
-  hasPreviousTwoStepPawnMove: EnPassentColumn = '-', // the column of the last two step pawn move
+  enPassentColumn: EnPassentColumn = '-', // the column of the last two step pawn move
   castlingRights: CastlingLetter[] = [],
 ): Move[] => {
+  //reduce find calls since they are already done in calling function
   const piece = board.find((square) => square.row === from.row && square.column === from.column);
   if (isNil(piece)) {
     throw new Error('No piece found at the given position');
@@ -401,7 +408,7 @@ export const calculateMoveListForPiece = (
     .with('KNIGHT', () => calculateMoveListForKnight(from, board))
     .with('ROOK', () => calculateMoveListForRook(from, board))
     .with('QUEEN', () => calculateMoveListForQueen(from, board))
-    .with('PAWN', () => calculateMoveListForPawn(from, board, hasPreviousTwoStepPawnMove))
+    .with('PAWN', () => calculateMoveListForPawn(from, board, enPassentColumn))
     .otherwise(() => {
       throw new Error('Invalid piece type');
     });
@@ -410,7 +417,6 @@ export const calculateMoveListForPiece = (
   const prunedMoveList = moveList.filter((move) => {
     const newBoard = makeMoveOnBoard(
       from,
-      // might be week
       { ...move, figure: piece?.figure ?? 'PAWN', color: piece?.color ?? 'none' },
       board,
     );

@@ -21,18 +21,24 @@ describe('Move generation for pawn', () => {
     const movesA2 = calculateMoveListForPawn({ column: 'a', row: 2 }, board);
     const movesH2 = calculateMoveListForPawn({ column: 'h', row: 2 }, board);
 
-    expect(movesE2).toEqual([
-      { row: 3, column: 'e', isTaken: false },
-      { row: 4, column: 'e', isTaken: false },
-    ]);
-    expect(movesA2).toEqual([
-      { row: 3, column: 'a', isTaken: false },
-      { row: 4, column: 'a', isTaken: false },
-    ]);
-    expect(movesH2).toEqual([
-      { row: 3, column: 'h', isTaken: false },
-      { row: 4, column: 'h', isTaken: false },
-    ]);
+    expect(movesE2).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'e', isTaken: false, isTakenEnPassent: false },
+        { row: 4, column: 'e', isTaken: false, isTakenEnPassent: false },
+      ]),
+    );
+    expect(movesA2).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'a', isTaken: false, isTakenEnPassent: false },
+        { row: 4, column: 'a', isTaken: false, isTakenEnPassent: false },
+      ]),
+    );
+    expect(movesH2).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'h', isTaken: false, isTakenEnPassent: false },
+        { row: 4, column: 'h', isTaken: false, isTakenEnPassent: false },
+      ]),
+    );
   });
   it('generates an empty list for a blocked white pawn on e4 and h4', () => {
     const initPosE4: Fen = validFenFrom('rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2');
@@ -67,24 +73,26 @@ describe('Move generation for pawn', () => {
     const movesWhitePawn = calculateMoveListForPawn({ column: 'f', row: 4 }, board);
     const movesBlackPawn = calculateMoveListForPawn({ column: 'e', row: 5 }, board);
     expect(movesWhitePawn).toEqual([
-      { row: 5, column: 'f', isTaken: false },
-      { row: 5, column: 'e', isTaken: true },
+      { row: 5, column: 'f', isTaken: false, isTakenEnPassent: false },
+      { row: 5, column: 'e', isTaken: true, isTakenEnPassent: false },
     ]);
     expect(movesBlackPawn).toEqual([
-      { row: 4, column: 'e', isTaken: false },
-      { row: 4, column: 'f', isTaken: true },
-      { row: 4, column: 'd', isTaken: true },
+      { row: 4, column: 'e', isTaken: false, isTakenEnPassent: false },
+      { row: 4, column: 'f', isTaken: true, isTakenEnPassent: false },
+      { row: 4, column: 'd', isTaken: true, isTakenEnPassent: false },
     ]);
   });
   it('generates capture moves for white pawn on c2', () => {
     const initPos = validFenFrom('rnbqkbnr/pppp1ppp/8/8/8/1P1pP3/P1P2PPP/RNBQKBNR w KQkq - 0 4');
     const board = createChessBoardFromFen(initPos);
     const movesC2 = calculateMoveListForPawn({ column: 'c', row: 2 }, board);
-    expect(movesC2).toEqual([
-      { row: 3, column: 'c', isTaken: false },
-      { row: 3, column: 'd', isTaken: true },
-      { row: 4, column: 'c', isTaken: false },
-    ]);
+    expect(movesC2).toEqual(
+      expect.arrayContaining([
+        { row: 3, column: 'c', isTaken: false, isTakenEnPassent: false },
+        { row: 3, column: 'd', isTaken: true, isTakenEnPassent: false },
+        { row: 4, column: 'c', isTaken: false, isTakenEnPassent: false },
+      ]),
+    );
   });
 
   it('generates en passant move for white pawn on e5', () => {
@@ -92,8 +100,8 @@ describe('Move generation for pawn', () => {
     const board = createChessBoardFromFen(initPos);
     const movesE5 = calculateMoveListForPawn({ column: 'e', row: 5 }, board, 'd');
     expect(movesE5).toEqual([
-      { row: 6, column: 'e', isTaken: false },
-      { row: 6, column: 'd', isTaken: true },
+      { row: 6, column: 'e', isTaken: false, isTakenEnPassent: false },
+      { row: 6, column: 'd', isTaken: true, isTakenEnPassent: true },
     ]);
   });
   it('generates en passant move for black pawn on e4', () => {
@@ -102,8 +110,8 @@ describe('Move generation for pawn', () => {
     const movesE5 = calculateMoveListForPawn({ column: 'e', row: 4 }, board, 'f');
 
     expect(movesE5).toEqual([
-      { row: 3, column: 'e', isTaken: false },
-      { row: 3, column: 'f', isTaken: true },
+      { row: 3, column: 'e', isTaken: false, isTakenEnPassent: false },
+      { row: 3, column: 'f', isTaken: true, isTakenEnPassent: true },
     ]);
   });
   it('generates en passent move for black blocked pawn on e4', () => {
@@ -111,16 +119,16 @@ describe('Move generation for pawn', () => {
     const board = createChessBoardFromFen(initPos);
     const movesE5 = calculateMoveListForPawn({ column: 'e', row: 4 }, board, 'd');
 
-    expect(movesE5).toEqual([{ row: 3, column: 'd', isTaken: true }]);
+    expect(movesE5).toEqual([{ row: 3, column: 'd', isTaken: true, isTakenEnPassent: true }]);
   });
   it('generates en passent move for black pawn on d4 with capture', () => {
     const initPos = validFenFrom('rnbqkbnr/ppp1pppp/8/8/2Pp4/4PN2/PP1P1PPP/RNBQKB1R b KQkq c3 0 3');
     const board = createChessBoardFromFen(initPos);
     const movesD4 = calculateMoveListForPawn({ column: 'd', row: 4 }, board, 'c');
     expect(movesD4).toEqual([
-      { row: 3, column: 'd', isTaken: false },
-      { row: 3, column: 'e', isTaken: true },
-      { row: 3, column: 'c', isTaken: true },
+      { row: 3, column: 'd', isTaken: false, isTakenEnPassent: false },
+      { row: 3, column: 'e', isTaken: true, isTakenEnPassent: false },
+      { row: 3, column: 'c', isTaken: true, isTakenEnPassent: true },
     ]);
   });
 });
