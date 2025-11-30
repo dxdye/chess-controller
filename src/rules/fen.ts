@@ -14,7 +14,7 @@ const hasOneKingPerSide = (position: Fen) => {
   return whiteKingCount === 1 && blackKingCount === 1;
 };
 
-export const validFenFrom = (fen: Fen) => {
+export const validFenFrom = (fen: Fen): Fen => {
   if (isValidFen(fen)) {
     return fen;
   } else throw new Error('Invalid FEN string');
@@ -112,7 +112,7 @@ export const createFenFromChessBoard = (board: Board): Fen => {
         }
         fenRow += char;
       } else {
-        emptyCount++;
+        ++emptyCount;
       }
     }
 

@@ -8,6 +8,7 @@ import {
   Direction,
   EnPassentColumn,
   CastlingLetter,
+  Row,
 } from './types.ts';
 import { positionToCoordinate, boardToColorMap, boardToPieceMap, boardPieceMapToColorMap } from './board.ts';
 import { isIndexInBound, isNil } from './helper.ts';
@@ -321,6 +322,10 @@ export const calculateMoveListForPawn = (
   const directions = color === 'white' ? whitePawnDirections : blackPawnDirections;
   const boardColorMap = boardToColorMap(board);
 
+  const isPromotion = (row: Row, color: Color): boolean => {
+    return (color === 'white' && row === 8) || (color === 'black' && row === 1);
+  };
+
   directions.map((direction) => {
     //evaluate all 3 directions
     let addToMoves: boolean = false;
@@ -360,6 +365,7 @@ export const calculateMoveListForPawn = (
         ...coordinateToPosition(updatedColumn, updatedRow),
         isTaken: takesOtherPiece,
         isTakenEnPassent: enPassentCapture,
+        isPromotion: isPromotion(coordinateToPosition(updatedColumn, updatedRow).row, color),
       });
     }
   });
@@ -382,6 +388,7 @@ export const calculateMoveListForPawn = (
         ...coordinateToPosition(updatedColumn, updatedRow),
         isTaken: false,
         isTakenEnPassent: false,
+        isPromotion: false, //promition not possible on two step move
       });
     }
   }
