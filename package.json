@@ -19,7 +19,8 @@
     "test:rules": "NODE_NO_WARNINGS=1 node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/*",
     "test:rules::check": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/check.test.ts",
     "test:rules::move": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/move.test.ts",
-    "test:rules::pgn": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/pgn.test.ts"
+    "test:rules::pgn": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/pgn.test.ts",
+    "test:rules::game": "node --experimental-require-module  ./node_modules/.bin/jest --config ./jest.config.ts src/__test__/rules/game.test.ts"
   },
   "dependencies": {
     "eslint-plugin-jest": "^29.0.1",
