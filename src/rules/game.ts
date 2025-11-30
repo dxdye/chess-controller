@@ -4,6 +4,7 @@ import { BOTH_CAN_CASTLE, INIT_POSITION } from './constant.ts';
 import {
   Board,
   CastlingLetter,
+  Column,
   DrawTypes,
   EnPassentColumn,
   Fen,
@@ -14,6 +15,7 @@ import {
   Piece,
   Position,
   PromotionFigure,
+  Row,
   Square,
   StrictColor,
 } from './types.ts';
@@ -29,7 +31,7 @@ import {
 } from './fen.ts';
 import { removeDuplicatesFromArray } from './helper.ts';
 import { columnToIndex } from './transform.ts';
-import { isStaleMate } from './check.ts';
+import { isCheckMate, isStaleMate } from './check.ts';
 import { moveToSan } from './pgn.ts';
 
 const castlingRightsActions = {
@@ -142,6 +144,10 @@ export const gameFromFen = (fen: Fen): Game => {
   if (game.fullmoveNumber <= 0) {
     throw new Error('Invalid FEN string: fullmove number must be positive');
   }
+  //check for draw
+  game.checkForDraw();
+  //check for checkmate
+  game.checkForCheckmate();
 
   return game;
 };
@@ -196,25 +202,33 @@ export class Game {
     this.newGame();
   }
 
-  evaluate(writeToPgn?: boolean): GameResult {
+  writeEvaluationToPgn() {
     if (this.gameState === 'DRAWN') {
-      if (writeToPgn) {
-        this.pgn.push('1/2-1/2');
-      }
+      this.pgn.push('1/2-1/2');
       return 'DRAW';
     }
     if (this.gameState === 'CHECKMATE') {
       if (this.turn === 'white') {
-        if (writeToPgn) {
-          this.pgn.push('0-1');
-        }
+        this.pgn.push('0-1');
         return 'BLACK_WINS';
       } else {
-        if (writeToPgn) {
-          this.pgn.push('1-0');
-        }
+        this.pgn.push('1-0');
         return 'WHITE_WINS';
       }
+    }
+    return '-';
+  }
+
+  evaluate(): GameResult {
+    //evaluate without making move
+    this.checkForDraw();
+    if (this.gameState === 'DRAWN') {
+      return 'DRAW';
+    }
+
+    if (isCheckMate(this.currentBoard, this.turn)) {
+      this.gameState = 'CHECKMATE';
+      return this.turn === 'white' ? 'BLACK_WINS' : 'WHITE_WINS';
     }
     return '-';
   }
@@ -256,6 +270,11 @@ export class Game {
 
   move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
     this.checkForDraw();
+    if (this.gameState !== 'DRAWN') {
+      // save performance by not checking for checkmate if already drawn
+      this.checkForCheckmate();
+    }
+
     if (this.gameState === 'DRAWN') {
       return 'GAME_DRAWN';
     }
@@ -304,6 +323,7 @@ export class Game {
       //add move to PGN
       this.pgn.push(moveToSan(from, fullValidMove, this.currentBoard));
       //yes, there are multiple calls of isKingChecked in this procedure
+      //this should be optimized later
 
       return { from, to, promotionTo: promoteTo };
     }
@@ -343,16 +363,40 @@ export class Game {
     }
   }
 
-  checkForDraw() {
-    if (this.gameState !== 'ONGOING') return;
-    if (this.checkInsufficientMaterial()) return;
-    if (this.checkStalemate()) return;
-    if (this.checkFiftyMoveRule()) return;
+  checkForCheckmate(): GameResult {
+    const whiteInCheckmate = isCheckMate(this.currentBoard, 'white');
+    const blackInCheckmate = isCheckMate(this.currentBoard, 'black');
+    if (whiteInCheckmate && blackInCheckmate) throw new Error('Invalid game state: both players in checkmate');
+    if (whiteInCheckmate) {
+      if (this.turn === 'black') {
+        throw new Error('Invalid game state: white in checkmate but black to move');
+      }
+      this.gameState = 'CHECKMATE';
+      return 'BLACK_WINS';
+    }
+    if (blackInCheckmate) {
+      if (this.turn === 'white') {
+        throw new Error('Invalid game state: black in checkmate but white to move');
+      }
+
+      this.gameState = 'CHECKMATE';
+      return 'WHITE_WINS';
+    }
+
+    return '-';
+  }
+  checkForDraw(): DrawTypes {
+    if (this.gameState !== 'ONGOING') return this.drawType;
+    if (this.checkFiftyMoveRule()) return this.drawType;
+    if (this.checkInsufficientMaterial()) return this.drawType;
+    if (this.checkStalemate()) return this.drawType;
+    return this.drawType;
   }
   agreeToDraw() {
     this.gameState = 'DRAWN';
     this.drawType = 'DRAW_BY_AGREEMENT';
   }
+
   setDrawAfterThreefoldRepetition() {
     if (!this.isThreeFoldRepetition) throw new Error('Threefold repetition condition not met');
     this.gameState = 'DRAWN';
@@ -433,21 +477,14 @@ export class Game {
       const onlyBishops = otherPieces.every((sq) => sq.figure === 'BISHOP');
 
       const sameColorBishops = (bp1?: Square, bp2?: Square): boolean => {
-        if (bp1 === undefined || bp2 === undefined) return false;
-        const bishop1SquareColor =
-          (bp1.color === 'white'
-            ? (bp1.row + columnToIndex(bp1.column)) % 2
-            : (bp1.row + columnToIndex(bp1.column) + 1) % 2) === 0
-            ? 'light'
-            : 'dark';
-        const bishop2SquareColor =
-          (bp2.color === 'white'
-            ? (bp2.row + columnToIndex(bp2.column)) % 2
-            : (bp2.row + columnToIndex(bp2.column) + 1) % 2) === 0
-            ? 'light'
-            : 'dark';
-        return bishop1SquareColor === bishop2SquareColor;
+        if (!bp1 || !bp2) return false;
+        const isLightSquare = (row: Row, column: Column): boolean => {
+          return (row + columnToIndex(column)) % 2 === 0;
+        };
+
+        return isLightSquare(bp1.row, bp1.column) === isLightSquare(bp2.row, bp2.column);
       };
+      const bishopsSameColor = sameColorBishops(otherPieces[0], otherPieces[1]);
 
       if (
         onlyBishops &&
@@ -455,7 +492,7 @@ export class Game {
         otherPieces[0]?.figure === otherPieces[1]?.figure &&
         //are they of different color
         otherPieces[0]?.color !== otherPieces[1]?.color &&
-        sameColorBishops(otherPieces[0], otherPieces[1])
+        bishopsSameColor
       ) {
         this.gameState = 'DRAWN';
         this.drawType = 'DRAW_BY_INSUFFICIENT_MATERIAL';

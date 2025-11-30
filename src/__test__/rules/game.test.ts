@@ -54,9 +54,89 @@ describe('test game from fen', () => {
 });
 
 
-//test draw by stalemate
-//test draw by insufficient material
-//test draw by fifty move rule
+describe('test game result evaluations', () => {
+  it('should detect checkmate from fen', () => {
+    const fen = '8/8/4R3/5k2/6Q1/4K3/8/6R1 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForCheckmate();
+    expect(result).toBe('WHITE_WINS');
+    expect(game.gameState).toBe('CHECKMATE');
+  });
+  it('should detect stalemate from fen', () => {
+    const fen = '8/6K1/8/7k/7p/7R/6Q1/8 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_STALEMATE');
+    expect(game.gameState).toBe('DRAWN');
+  });
+  it('should detect insufficient material from fen', () => {
+    const fen = '8/8/8/8/8/4k3/8/3K4 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_INSUFFICIENT_MATERIAL');
+    expect(game.gameState).toBe('DRAWN');
+  });
+  it('should detect insufficient material from fen, two same colored bishops', () => {
+    const fen = '8/8/8/8/8/B3k3/3b4/3K4 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_INSUFFICIENT_MATERIAL');
+    expect(game.gameState).toBe('DRAWN');
+  });
+  it('should detect insufficient material from fen, one knight', () => {
+    const fen = '8/8/8/8/8/4k3/1N6/3K4 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_INSUFFICIENT_MATERIAL');
+    expect(game.gameState).toBe('DRAWN');
+  });
+  it('should detect insufficient material from fen, one bishop', () => {
+    const fen = '8/8/8/8/8/4k3/5b2/3K4 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_INSUFFICIENT_MATERIAL');
+    expect(game.gameState).toBe('DRAWN');
+  });
+  it('is not a draw, because of two bishops of opposite color', () => {
+    const fen = 'k7/b7/8/8/2K1B3/8/8/8 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('NO_DRAW');
+    expect(game.gameState).toBe('ONGOING');
+  });
+  it('is not a draw, because of knight and bishop combo', () => {
+    const fen = 'k7/8/8/8/2K1B3/8/8/3N4 b - - 0 1';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('NO_DRAW');
+    expect(game.gameState).toBe('ONGOING');
+  });
+
+  it('is a draw by fifty move rule', () => {
+    const fen = '8/8/8/8/8/4k3/8/3K4 b - - 50 20';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('DRAW_BY_FIFTY_MOVE_RULE');
+    expect(game.gameState).toBe('DRAWN');
+  });
+
+  it('is not a draw by fifty move rule yet', () => {
+    const fen = '8/8/4N3/5N2/8/4k3/8/3K4 b - - 49 20';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('NO_DRAW');
+    expect(game.gameState).toBe('ONGOING');
+  });
+  it('is not a draw by fifty move rule with reset halfmove clock', () => {
+    const fen = '8/8/4N3/5N2/8/4k3/8/3K4 b - - 0 20';
+    const game = gameFromFen(fen);
+    const result = game.checkForDraw();
+    expect(result).toBe('NO_DRAW');
+    expect(game.gameState).toBe('ONGOING');
+  });
+});
+
+
 //test draw by threefold repetition
 //test checkmate detection
 //test check detection
