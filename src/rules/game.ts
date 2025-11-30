@@ -10,6 +10,7 @@ import {
   Fen,
   GameResult,
   GameState,
+  HistMove,
   Move,
   MoveConfirmation,
   Piece,
@@ -188,7 +189,7 @@ export class Game {
   enPassantTarget: EnPassentColumn = '-';
 
   //history
-  shortMoveHistory: Move[] = [];
+  shortMoveHistory: HistMove[] = [];
   history: Fen[] = [];
 
   gameState: GameState = 'ONGOING';
@@ -284,6 +285,7 @@ export class Game {
 
     //is turn valid
     const piece = this.currentBoard.find((sq) => sq.row === from.row && sq.column === from.column);
+    console.log('Moving piece:', this.turn);
     if (!piece || piece.color !== this.turn) {
       return 'MOVE_INVALID';
     }
@@ -302,8 +304,8 @@ export class Game {
       const fullValidMove: Move = { ...validMove, color: piece.color, figure: piece.figure };
 
       // add game to history
-      this.history.push(this.currentGameToFen());
-      this.addToShortHistory(fullValidMove);
+      //this.history.push(this.currentGameToFen());
+      this.addToShortHistory({ ...fullValidMove, fromRow: from.row, fromColumn: from.column });
 
       // make move on board
       this.currentBoard = makeMoveOnBoard(from, fullValidMove, this.currentBoard, promoteTo);
@@ -314,14 +316,13 @@ export class Game {
       this.incrementHalfmoveClock(piece.figure === 'PAWN', validMove.isTaken ?? false);
       this.incrementFullmoveNumber();
 
-      //check for threefold repetition
-      this.checkThreeFoldRepetition();
-
       if (!promoteTo && this.isThreeFoldRepetition) {
         return 'OFFER_DRAW';
       }
       //add move to PGN
       this.pgn.push(moveToSan(from, fullValidMove, this.currentBoard));
+      //check for threefold repetition
+      this.checkThreeFoldRepetition();
       //yes, there are multiple calls of isKingChecked in this procedure
       //this should be optimized later
 
@@ -397,7 +398,7 @@ export class Game {
     this.drawType = 'DRAW_BY_AGREEMENT';
   }
 
-  setDrawAfterThreefoldRepetition() {
+  claimThreeFoldRepetition() {
     if (!this.isThreeFoldRepetition) throw new Error('Threefold repetition condition not met');
     this.gameState = 'DRAWN';
     this.drawType = 'DRAW_BY_THREEFOLD_REPETITION';
@@ -410,7 +411,7 @@ export class Game {
   private currentGameToFen(): Fen {
     return gameToFen(this);
   }
-  private addToShortHistory(move: Move) {
+  private addToShortHistory(move: HistMove) {
     this.shortMoveHistory.push(move);
     //keep only last 6 moves
     if (this.shortMoveHistory.length > 6) {
@@ -502,13 +503,14 @@ export class Game {
     return false;
   }
   private checkThreeFoldRepetition() {
-    if (this.shortMoveHistory.length < 6) {
+    if (this.shortMoveHistory.length < 12) {
       this.isThreeFoldRepetition = false;
       return;
     }
 
-    const lastThreeMoves = this.shortMoveHistory.slice(-6);
+    const lastThreeMoves = this.shortMoveHistory.slice(-12);
     const lastMove = lastThreeMoves[lastThreeMoves.length - 1];
+    console.log('Last move:', lastMove);
 
     if (!lastMove) return;
 

@@ -1,4 +1,5 @@
 import { gameFromFen } from '../../rules/game.ts';
+import { HistMove } from '../../rules/types.ts';
 
 describe('test game from fen', () => {
   it('should create game from fen string', () => {
@@ -52,7 +53,6 @@ describe('test game from fen', () => {
     expect(game.fullmoveNumber).toBe(10);
   });
 });
-
 
 describe('test game result evaluations', () => {
   it('should detect checkmate from fen', () => {
@@ -133,6 +133,48 @@ describe('test game result evaluations', () => {
     const result = game.checkForDraw();
     expect(result).toBe('NO_DRAW');
     expect(game.gameState).toBe('ONGOING');
+  });
+
+  it.only('is a draw by threefold repetition', () => {
+    const game = gameFromFen('8/8/3NN3/8/8/4k3/8/3K4 w - - 0 20');
+    //simulate threefold repetition
+    const lastSixMoves: HistMove[] = [
+      //1st repetition
+      { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+
+      //2nd repetition
+      { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+
+      //3th repetition
+      { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+
+      //4th repetition
+      { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+    ];
+
+    //make moves
+    lastSixMoves.forEach((move) => {
+      console.log(game.move({ row: move.fromRow, column: move.fromColumn }, move));
+      console.log(game.drawType);
+      console.log(game.gameState);
+    });
+
+    // const result = game.claimThreeFoldRepetition();
+
+    // expect(result).toBe('DRAW_BY_THREEFOLD_REPETITION');
+    // expect(game.gameState).toBe('DRAWN');
   });
 });
 

@@ -25,7 +25,8 @@ export type MoveProperties = {
   isCastle?: CastlingLetter;
 };
 export type DestMove = Position & MoveProperties; //extra info for move
-export type Move = DestMove & Square; //move with source position
+export type Move = DestMove & Piece;  //move with piece info
+export type HistMove = Move & { fromRow: Row, fromColumn: Column }; //move with source info
 
 export type DrawTypes =
   | 'DRAW_BY_AGREEMENT'

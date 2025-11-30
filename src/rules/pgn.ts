@@ -4,6 +4,9 @@ import { Board, Color, Move, Position } from './types.ts';
 import { isCheckMate, isKingChecked } from './check.ts';
 import { makeMoveOnBoard } from './game.ts';
 
+
+//SAN = Standard Algebraic Notation
+
 const oppositeColor = (color: Color): Color => {
   if (color === 'white') return 'black';
   if (color === 'black') return 'white';

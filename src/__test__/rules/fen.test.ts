@@ -1,5 +1,5 @@
 import { INIT_POSITION } from '../../rules/constant.ts';
-import { isValidFenSyntax } from '../../rules/fen.ts';
+import { isValidFen, isValidFenSyntax } from '../../rules/fen.ts';
 import { Fen } from '../../rules/types.ts';
 
 describe('regex match for Fen module', () => {
@@ -78,5 +78,30 @@ describe('regex match for Fen module', () => {
   it('has three kings', () => {
     const someFEN: Fen = 'rnbqkbnr/pppppppk/8/8/8/8/PPPPPPPK/RNBQKBNR w KQkq - 0 1';
     expect(isValidFenSyntax(someFEN)).toBe(false);
+  });
+
+  it('checks this position 8/8/3NN3/8/8/4k3/8/3K4 w - - 0 20', () => {
+    const someFEN: Fen = '8/8/3NN3/8/8/4k3/8/3K4 w - - 0 20';
+    expect(isValidFenSyntax(someFEN)).toBe(true);
+    expect(isValidFen(someFEN)).toBe(true);
+  });
+});
+
+describe('additional FEN tests', () => {
+  it('should return false for missing parts', () => {
+    const someFEN: Fen = '8/8/3NN3/8/8/4k3/8/3K4 w - - 0'; //missing fullmove number
+    expect(isValidFen(someFEN)).toBe(false);
+  });
+  it('should return false for missing rows', () => {
+    const someFEN: Fen = '8/8/3NN3/8/8/4k3/3K4 w - - 0 20'; //only 7 rows
+    expect(isValidFen(someFEN)).toBe(false);
+  });
+  it('should return false for too many rows', () => {
+    const someFEN: Fen = '8/8/3NN3/8/8/4k3/8/8/3K4 w - - 0 20'; //9 rows
+    expect(isValidFen(someFEN)).toBe(false);
+  });
+  it('should return false for missing piece placement part', () => {
+    const someFEN: Fen = ' w KQkq - 0 1'; //missing piece placement
+    expect(isValidFen(someFEN)).toBe(false);
   });
 });
