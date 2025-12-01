@@ -33,10 +33,12 @@ export type DrawTypes =
   | 'DRAW_BY_INSUFFICIENT_MATERIAL'
   | 'DRAW_BY_STALEMATE'
   | 'DRAW_BY_FIFTY_MOVE_RULE'
-  | 'DRAW_BY_THREEFOLD_REPETITION'
+  | 'DRAW_BY_THREEFOLD_REPETITION_BY_WHITE'
+  | 'DRAW_BY_THREEFOLD_REPETITION_BY_BLACK'
   | 'NO_DRAW';
 export type GameState = 'ONGOING' | 'CHECKMATE' | 'DRAWN';
 export type GameResult = 'WHITE_WINS' | 'BLACK_WINS' | 'DRAW' | '-';
+
 
 export type MoveConfirmation =
   | ({

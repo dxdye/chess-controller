@@ -1,7 +1,19 @@
 import { INIT_POSITION } from './constant.ts';
 import { isNil, removeDuplicatesFromArray } from './helper.ts';
-import { Fen, Board, CastlingLetter, CastlingLetters, EnPassentColumn, StrictColor } from './types.ts';
-import { figureToLetter } from './transform.ts';
+import {
+  Fen,
+  Board,
+  CastlingLetter,
+  CastlingLetters,
+  EnPassentColumn,
+  StrictColor,
+  Row,
+  Column,
+  Piece,
+  Columns,
+  Rows,
+} from './types.ts';
+import { columnToIndex, figureToLetter, incrementColumn } from './transform.ts';
 
 const validFen =
   /\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4}|-)\s(-|[a-h][1-8])\s(\d+\s\d+)/;
@@ -90,14 +102,60 @@ export const extractMoveCountFromFen = (position: Fen): number => {
 
 export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;
 
-export const createFenFromChessBoard = (board: Board): Fen => {
-  const rows: string[] = Array(8).fill('');
+export const createFenPositionFromChessBoard = (board: Board): string => {
+  const boardMap: Map<Row, (Piece & { column: Column })[]> = new Map();
+
   board.forEach((square) => {
-    const rowIndex = 8 - square.row;
-    rows[rowIndex] += figureToLetter({
+    if (!boardMap.has(square.row)) {
+      boardMap.set(square.row, []);
+    }
+    //check for duplicate squares
+    if (boardMap.get(square.row)?.some((sq) => sq.column === square.column)) {
+      throw new Error(`Duplicate square found at row ${square.row} and column ${square.column}`);
+    }
+
+    boardMap.get(square.row)?.push({
       figure: square.figure,
       color: square.color,
+      column: square.column,
     });
+  });
+  Rows.forEach((row) => {
+    if (!boardMap.has(row)) {
+      boardMap.set(row, []);
+    }
+  });
+
+  boardMap.forEach((row) => {
+    //sort by column
+    row.sort((a, b) => columnToIndex(a.column) - columnToIndex(b.column));
+  });
+
+  const rows: string[] = Array<string>(8).fill('');
+  boardMap.forEach((squares, row) => {
+    let distance = 0;
+    for (let c: Column = 'a'; c < 'h'; c = incrementColumn(c)) {
+      const existingSquare = squares.find((sq) => sq.column === c);
+      if (!existingSquare) {
+        ++distance;
+      } else {
+        if (distance > 0) {
+          rows[8 - row] += distance.toString();
+          distance = 0;
+        }
+        rows[8 - row] += figureToLetter({
+          figure: existingSquare.figure,
+          color: existingSquare.color,
+        });
+      }
+    }
+    const hSquare = squares.find((sq) => sq.column === 'h');
+    if (!hSquare) {
+      ++distance;
+    }
+    if (distance > 0) {
+      rows[8 - row] += distance.toString();
+    }
   });
 
   const fenRows = rows.map((row) => {
@@ -105,7 +163,7 @@ export const createFenFromChessBoard = (board: Board): Fen => {
     let emptyCount = 0;
 
     for (const char of row) {
-      if (/[rnbqkpRNBQKP]/.test(char)) {
+      if (/[rnbqkpRNBQKP12345678]/.test(char)) {
         if (emptyCount > 0) {
           fenRow += emptyCount.toString();
           emptyCount = 0;
@@ -124,6 +182,12 @@ export const createFenFromChessBoard = (board: Board): Fen => {
   });
 
   const piecePlacement = fenRows.join('/');
+  return piecePlacement;
+};
+
+export const createFenFromChessBoard = (board: Board): Fen => {
+  const piecePlacement = createFenPositionFromChessBoard(board);
+  // sort board first by column then by row descending
   // Default values for other Fen fields
   const activeColor = 'w';
   const castlingAvailability = 'KQkq';
