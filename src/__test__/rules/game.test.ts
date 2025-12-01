@@ -1,4 +1,4 @@
-import { gameFromFen } from '../../rules/game.ts';
+import { gameFromFen, gameToFen } from '../../rules/game.ts';
 import { HistMove } from '../../rules/types.ts';
 
 describe('test game from fen', () => {
@@ -166,18 +166,16 @@ describe('test game result evaluations', () => {
 
     //make moves
     lastSixMoves.forEach((move) => {
-      console.log(game.move({ row: move.fromRow, column: move.fromColumn }, move));
-      console.log(game.drawType);
-      console.log(game.gameState);
+      game.move({ row: move.fromRow, column: move.fromColumn }, move);
+      console.log(gameToFen(game));
     });
 
-    // const result = game.claimThreeFoldRepetition();
+    const result = game.claimThreeFoldRepetition();
 
     // expect(result).toBe('DRAW_BY_THREEFOLD_REPETITION');
     // expect(game.gameState).toBe('DRAWN');
   });
 });
-
 
 //test draw by threefold repetition
 //test checkmate detection

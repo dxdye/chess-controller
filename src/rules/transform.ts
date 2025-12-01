@@ -78,6 +78,21 @@ export const columnToIndex = (col: Column): CX =>
     .exhaustive();
 export const rowToIndex = (row: Row): CY => row;
 
+export const incrementColumn = (col: Column): Column => {
+  return match<Column, Column>(col)
+    .with('a', () => 'b')
+    .with('b', () => 'c')
+    .with('c', () => 'd')
+    .with('d', () => 'e')
+    .with('e', () => 'f')
+    .with('f', () => 'g')
+    .with('g', () => 'h')
+    .with('h', () => {
+      throw new Error('Cannot increment column beyond h');
+    })
+    .exhaustive();
+};
+
 export const enPassentColumnToIndex = (col: Column | '-'): CX =>
   match<Column | '-', CX>(col)
     .with('-', () => -Infinity)
