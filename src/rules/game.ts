@@ -138,6 +138,7 @@ export const gameFromFen = (fen: Fen): Game => {
   game.enPassantTarget = extractEnPassentTargetFromFen(fen);
   game.halfmoveClock = extractHalfmoveClockFromFen(fen);
   game.fullmoveNumber = extractMoveCountFromFen(fen);
+  game.history.push(fen);
   if (game.halfmoveClock < 0) {
     throw new Error('Invalid FEN string: halfmove clock cannot be negative');
   }
@@ -257,10 +258,10 @@ export class Game {
     this.fullmoveNumber = g.fullmoveNumber;
     this.drawType = 'NO_DRAW';
     this.gameState = 'ONGOING';
-    this.pgn = [];
     this.history = history;
     this.threeFoldRepetitionByBlack = false;
     this.threeFoldRepetitionByWhite = false;
+    this.pgn = [];
   }
 
   setPositionToFen(fen: Fen) {
@@ -268,9 +269,6 @@ export class Game {
   }
 
   move(from: Position, to: Position, promoteTo?: PromotionFigure): MoveConfirmation {
-    // add game to history
-    this.history.push(this.currentGameToFen());
-    this.checkThreeFoldRepetition();
     this.checkForDraw();
 
     if (this.gameState !== 'DRAWN') {
@@ -311,8 +309,11 @@ export class Game {
 
       //increment clocks
       this.incrementHalfmoveClock(piece.figure === 'PAWN', validMove.isTaken ?? false);
-      this.incrementFulllMoveNumber();
+      this.incrementFullMoveNumber();
 
+      // add game to history
+      this.history.push(this.currentGameToFen());
+      this.checkThreeFoldRepetition();
       //add move to PGN
       this.pgn.push(moveToSan(from, fullValidMove, this.currentBoard));
       //check for threefold repetition
@@ -391,21 +392,24 @@ export class Game {
     this.drawType = 'DRAW_BY_AGREEMENT';
   }
 
-  claimThreeFoldRepetition() {
-    if (this.turn === 'white' && !this.threeFoldRepetitionByWhite)
-      throw new Error('Threefold repetition condition not met for white');
-    if (this.turn === 'black' && !this.threeFoldRepetitionByBlack)
-      throw new Error('Threefold repetition condition not met for black');
-    if (this.turn === 'white' && this.threeFoldRepetitionByWhite) {
+  claimThreeFoldRepetition(byPlayer: StrictColor): boolean {
+    //check happens after move is made
+    const opponent: StrictColor = byPlayer === 'white' ? 'black' : 'white';
+
+    //only the player to move can claim the draw
+    if (this.turn !== opponent) return false;
+
+    if (this.threeFoldRepetitionByWhite) {
       this.gameState = 'DRAWN';
       this.drawType = 'DRAW_BY_THREEFOLD_REPETITION_BY_WHITE';
-      return;
+      return true;
     }
-    if (this.turn === 'black' && this.threeFoldRepetitionByBlack) {
+    if (this.threeFoldRepetitionByBlack) {
       this.gameState = 'DRAWN';
       this.drawType = 'DRAW_BY_THREEFOLD_REPETITION_BY_BLACK';
-      return;
+      return true;
     }
+    return false;
   }
 
   //private methods
@@ -424,8 +428,8 @@ export class Game {
     }
   }
 
-  private incrementFulllMoveNumber() {
-    if (this.turn === 'black' && this.history.length % 2 === 1) {
+  private incrementFullMoveNumber() {
+    if (this.turn === 'white' && this.history.length % 2 === 0) {
       ++this.fullmoveNumber;
     }
   }
@@ -503,9 +507,18 @@ export class Game {
   private checkThreeFoldRepetition() {
     //count the occurences of current position in history
     const currentFen = this.currentGameToFen();
-    const occurrences = this.history.filter((fen) => fen === currentFen).length;
-    if (occurrences >= 2) {
+    const position = currentFen.split(' ')[0];
+    const toMove = currentFen.split(' ')[1];
+    const occurrences = this.history.filter((fen) => {
+      const fenPosition = fen.split(' ')[0];
+      const fenTurn = fen.split(' ')[1];
+      if (fenTurn !== toMove) return false;
+      return fenPosition === position;
+    }).length;
+
+    if (occurrences > 2) {
       if (this.turn === 'white') {
+        //use opposite color because turn has already changed
         this.threeFoldRepetitionByWhite = true;
       } else {
         this.threeFoldRepetitionByBlack = true;
@@ -514,5 +527,46 @@ export class Game {
       this.threeFoldRepetitionByWhite = false;
       this.threeFoldRepetitionByBlack = false;
     }
+  }
+
+  printGame(onlyBoard: boolean = false) {
+    let finalBoard: string = 'Current Board:\n\n';
+    for (let r = 8; r >= 1; r--) {
+      let rowStr = '';
+      for (const c of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as Column[]) {
+        const piece = this.currentBoard.find((sq) => sq.row === r && sq.column === c);
+        if (piece) {
+          const symbol = match(piece.figure)
+            .with('KING', () => (piece.color !== 'white' ? '♔' : '♚'))
+            .with('QUEEN', () => (piece.color !== 'white' ? '♕' : '♛'))
+            .with('ROOK', () => (piece.color !== 'white' ? '♖' : '♜'))
+            .with('BISHOP', () => (piece.color !== 'white' ? '♗' : '♝'))
+            .with('KNIGHT', () => (piece.color !== 'white' ? '♘' : '♞'))
+            .with('PAWN', () => (piece.color !== 'white' ? '♙' : '♟'))
+            .exhaustive();
+          rowStr += ` ${symbol} `;
+        } else {
+          rowStr += ' . ';
+        }
+      }
+      finalBoard += `${r} |${rowStr}|\n`;
+    }
+
+    finalBoard += '    a  b  c  d  e  f  g  h\n';
+    if (onlyBoard) {
+      console.log(finalBoard);
+      return;
+    }
+    let finalGameStr = finalBoard;
+    finalGameStr += `\nFEN: ${this.currentGameToFen()}\n`;
+    finalGameStr += `Turn: ${this.turn}\n`;
+    finalGameStr += `Castling Rights: ${this.castlingRights.join('') || 'None'}\n`;
+    finalGameStr += `En Passant Target: ${this.enPassantTarget}\n`;
+    finalGameStr += `Halfmove Clock: ${this.halfmoveClock}\n`;
+    finalGameStr += `Fullmove Number: ${this.fullmoveNumber}\n`;
+    finalGameStr += `Game State: ${this.gameState}\n`;
+    finalGameStr += `Draw Type: ${this.drawType}\n`;
+
+    console.log(finalGameStr);
   }
 }

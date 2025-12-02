@@ -135,10 +135,10 @@ describe('test game result evaluations', () => {
     expect(game.gameState).toBe('ONGOING');
   });
 
-  it.only('is a draw by threefold repetition', () => {
+  it.only('is a draw by threefold repetition by white', () => {
     const game = gameFromFen('8/8/3NN3/8/8/4k3/8/3K4 w - - 0 20');
     //simulate threefold repetition
-    const lastSixMoves: HistMove[] = [
+    const repeatingMoves: HistMove[] = [
       //1st repetition
       { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
       { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
@@ -147,9 +147,9 @@ describe('test game result evaluations', () => {
 
       //2nd repetition
       { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
-      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 2, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
       { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
-      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 2, fromColumn: 'f' },
 
       //3th repetition
       { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
@@ -157,23 +157,28 @@ describe('test game result evaluations', () => {
       { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
       { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
 
-      //4th repetition
-      { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
-      { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
-      { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
-      { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+      //some other moves
+      { row: 7, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 3, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+      { row: 5, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
     ];
 
     //make moves
-    lastSixMoves.forEach((move) => {
+    repeatingMoves.forEach((move) => {
       game.move({ row: move.fromRow, column: move.fromColumn }, move);
-      console.log(gameToFen(game));
     });
+    console.log('Game turn before claim:', game.turn);
 
-    const result = game.claimThreeFoldRepetition();
+    const drawClaimByWhite = game.claimThreeFoldRepetition('white');
+    const drawClaimByBlack = game.claimThreeFoldRepetition('black');
 
-    // expect(result).toBe('DRAW_BY_THREEFOLD_REPETITION');
-    // expect(game.gameState).toBe('DRAWN');
+    expect(drawClaimByBlack).toBe(true);
+    expect(drawClaimByWhite).toBe(false);
+
+    expect(game.gameState).toBe('DRAWN');
+    expect(game.drawType).toBe('DRAW_BY_THREEFOLD_REPETITION_BY_WHITE');
+    game.printGame();
+    expect(game.turn).toBe('black');
   });
 });
 
@@ -182,5 +187,7 @@ describe('test game result evaluations', () => {
 //test check detection
 //test normal ongoing game detection
 //test game result evaluation for all possible results
+//check for move counts
+//check move
 
 //test game from FEN
