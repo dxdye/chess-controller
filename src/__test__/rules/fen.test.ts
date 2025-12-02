@@ -1,6 +1,7 @@
+import { createFenFromChessBoard } from '../../rules/fen.ts';
 import { INIT_POSITION } from '../../rules/constant.ts';
 import { isValidFen, isValidFenSyntax } from '../../rules/fen.ts';
-import { Fen } from '../../rules/types.ts';
+import { Board, Fen } from '../../rules/types.ts';
 
 describe('regex match for Fen module', () => {
   //true take
@@ -103,5 +104,46 @@ describe('additional FEN tests', () => {
   it('should return false for missing piece placement part', () => {
     const someFEN: Fen = ' w KQkq - 0 1'; //missing piece placement
     expect(isValidFen(someFEN)).toBe(false);
+  });
+});
+
+describe('board to FEN conversion', () => {
+  it('should convert initial position correctly', () => {
+    const board: Board = [
+      { column: 'a', row: 1, figure: 'ROOK', color: 'white' },
+      { column: 'b', row: 1, figure: 'KNIGHT', color: 'white' },
+      { column: 'c', row: 1, figure: 'BISHOP', color: 'white' },
+      { column: 'd', row: 1, figure: 'QUEEN', color: 'white' },
+      { column: 'e', row: 1, figure: 'KING', color: 'white' },
+      { column: 'f', row: 1, figure: 'BISHOP', color: 'white' },
+      { column: 'g', row: 1, figure: 'KNIGHT', color: 'white' },
+      { column: 'h', row: 1, figure: 'ROOK', color: 'white' },
+      { column: 'a', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'b', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'c', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'd', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'e', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'f', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'g', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'h', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'a', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'b', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'c', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'd', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'e', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'f', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'g', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'h', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'a', row: 8, figure: 'ROOK', color: 'black' },
+      { column: 'b', row: 8, figure: 'KNIGHT', color: 'black' },
+      { column: 'c', row: 8, figure: 'BISHOP', color: 'black' },
+      { column: 'd', row: 8, figure: 'QUEEN', color: 'black' },
+      { column: 'e', row: 8, figure: 'KING', color: 'black' },
+      { column: 'f', row: 8, figure: 'BISHOP', color: 'black' },
+      { column: 'g', row: 8, figure: 'KNIGHT', color: 'black' },
+      { column: 'h', row: 8, figure: 'ROOK', color: 'black' },
+    ];
+    const fen = createFenFromChessBoard(board);
+    expect(fen).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   });
 });

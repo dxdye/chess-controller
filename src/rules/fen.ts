@@ -10,7 +10,6 @@ import {
   Row,
   Column,
   Piece,
-  Columns,
   Rows,
 } from './types.ts';
 import { columnToIndex, figureToLetter, incrementColumn } from './transform.ts';
