@@ -103,6 +103,11 @@ export const isNewGameFEN = (position: Fen) => position === INIT_POSITION;
 
 export const createFenPositionFromChessBoard = (board: Board): string => {
   const boardMap: Map<Row, (Piece & { column: Column })[]> = new Map();
+  board.forEach((square) => {
+    if ((square.row === 1 && square.figure === 'PAWN') || (square.row === 8 && square.figure === 'PAWN')) {
+      throw new Error('Invalid board on first rank or back rank');
+    }
+  });
 
   board.forEach((square) => {
     if (!boardMap.has(square.row)) {
@@ -149,10 +154,15 @@ export const createFenPositionFromChessBoard = (board: Board): string => {
       }
     }
     const hSquare = squares.find((sq) => sq.column === 'h');
-    if (!hSquare) {
+
+    if (hSquare) {
+      rows[8 - row] += figureToLetter({
+        figure: hSquare.figure,
+        color: hSquare.color,
+      });
+      return;
+    } else {
       ++distance;
-    }
-    if (distance > 0) {
       rows[8 - row] += distance.toString();
     }
   });
@@ -186,8 +196,6 @@ export const createFenPositionFromChessBoard = (board: Board): string => {
 
 export const createFenFromChessBoard = (board: Board): Fen => {
   const piecePlacement = createFenPositionFromChessBoard(board);
-  // sort board first by column then by row descending
-  // Default values for other Fen fields
   const activeColor = 'w';
   const castlingAvailability = 'KQkq';
   const enPassantTarget = '-';

@@ -74,5 +74,3 @@ export const getPieceFromPieceMap = (boardMap: (Piece | null)[][], position: Pos
 
 export const boardPieceMapToColorMap = (boardPieceMap: BoardPieceMap): BoardColorMap =>
   boardPieceMap.map((row) => row.map((piece) => (isNil(piece) ? 'none' : piece.color)));
-
-

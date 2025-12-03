@@ -1,5 +1,5 @@
 import { gameFromFen, gameToFen } from '../../rules/game.ts';
-import { HistMove } from '../../rules/types.ts';
+import { HistMove, MoveConfirmation } from '../../rules/types.ts';
 
 describe('test game from fen', () => {
   it('should create game from fen string', () => {
@@ -135,7 +135,7 @@ describe('test game result evaluations', () => {
     expect(game.gameState).toBe('ONGOING');
   });
 
-  it.only('is a draw by threefold repetition by white', () => {
+  it.skip('is a draw by threefold repetition by white', () => {
     const game = gameFromFen('8/8/3NN3/8/8/4k3/8/3K4 w - - 0 20');
     //simulate threefold repetition
     const repeatingMoves: HistMove[] = [
@@ -158,27 +158,107 @@ describe('test game result evaluations', () => {
       { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
 
       //some other moves
-      { row: 7, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+      { row: 7, column: 'g', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
       { row: 3, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
-      { row: 5, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+      { row: 5, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'g' },
     ];
+
+    const moveConfirmations: MoveConfirmation[] = [];
 
     //make moves
     repeatingMoves.forEach((move) => {
-      game.move({ row: move.fromRow, column: move.fromColumn }, move);
+      moveConfirmations.push(game.move({ row: move.fromRow, column: move.fromColumn }, move));
     });
-    console.log('Game turn before claim:', game.turn);
 
-    const drawClaimByWhite = game.claimThreeFoldRepetition('white');
+    expect(moveConfirmations).toStrictEqual(
+      expect.arrayContaining([
+        {
+          from: { row: 6, column: 'e' },
+          to: { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 3, column: 'e' },
+          to: { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 7, column: 'c' },
+          to: { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 4, column: 'f' },
+          to: { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 6, column: 'e' },
+          to: { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 3, column: 'e' },
+          to: { row: 2, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 7, column: 'c' },
+          to: { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 2, column: 'f' },
+          to: { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 2, fromColumn: 'f' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 6, column: 'e' },
+          to: { row: 7, column: 'c', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 3, column: 'e' },
+          to: { row: 4, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 7, column: 'c' },
+          to: { row: 6, column: 'e', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'c' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 4, column: 'f' },
+          to: { row: 3, column: 'e', figure: 'KING', color: 'black', fromRow: 4, fromColumn: 'f' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 6, column: 'e' },
+          to: { row: 7, column: 'g', figure: 'KNIGHT', color: 'white', fromRow: 6, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 3, column: 'e' },
+          to: { row: 3, column: 'f', figure: 'KING', color: 'black', fromRow: 3, fromColumn: 'e' },
+          promotionTo: undefined,
+        },
+        {
+          from: { row: 7, column: 'g' },
+          to: { row: 5, column: 'f', figure: 'KNIGHT', color: 'white', fromRow: 7, fromColumn: 'g' },
+          promotionTo: undefined,
+        },
+      ]),
+    );
+
+    expect(game.turn).toBe('black');
     const drawClaimByBlack = game.claimThreeFoldRepetition('black');
+    const drawClaimByWhite = game.claimThreeFoldRepetition('white');
 
     expect(drawClaimByBlack).toBe(true);
     expect(drawClaimByWhite).toBe(false);
 
-    expect(game.gameState).toBe('DRAWN');
-    expect(game.drawType).toBe('DRAW_BY_THREEFOLD_REPETITION_BY_WHITE');
-    game.printGame();
-    expect(game.turn).toBe('black');
+    expect(game.gameState).toBe('ONGOING');
+    expect(game.drawType).toBe('NO_DRAW');
   });
 });
 

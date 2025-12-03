@@ -517,7 +517,7 @@ export class Game {
     }).length;
 
     if (occurrences > 2) {
-      if (this.turn === 'white') {
+      if (this.turn === 'black') {
         //use opposite color because turn has already changed
         this.threeFoldRepetitionByWhite = true;
       } else {
