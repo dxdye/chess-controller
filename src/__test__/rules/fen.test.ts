@@ -146,4 +146,67 @@ describe('board to FEN conversion', () => {
     const fen = createFenFromChessBoard(board);
     expect(fen).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   });
+  it('should convert empty board correctly', () => {
+    const emptyBoard: Board = [];
+    const fen = createFenFromChessBoard(emptyBoard);
+    expect(fen).toBe('8/8/8/8/8/8/8/8 w KQkq - 0 1');
+  });
+  it('should throw error for invalid board with pawns on backrank', () => {
+    const boardWithInvalidBlackPawnOn1stRank: Board = [
+      { column: 'a', row: 1, figure: 'PAWN', color: 'black' },
+      { column: 'd', row: 6, figure: 'KING', color: 'white' },
+      { column: 'e', row: 6, figure: 'KNIGHT', color: 'white' },
+      { column: 'd', row: 8, figure: 'KING', color: 'black' },
+    ];
+    expect(() => createFenFromChessBoard(boardWithInvalidBlackPawnOn1stRank)).toThrow(
+      'Invalid board on first rank or back rank',
+    );
+  });
+  it('should convert board with few pieces correctly', () => {
+    const board: Board = [
+      { column: 'd', row: 4, figure: 'KING', color: 'white' },
+      { column: 'e', row: 4, figure: 'KNIGHT', color: 'white' },
+      { column: 'd', row: 5, figure: 'KING', color: 'black' },
+    ];
+    const fen = createFenFromChessBoard(board);
+    expect(fen).toBe('8/8/8/3k4/3KN3/8/8/8 w KQkq - 0 1');
+  });
+  it('should convert a more complex position correctly', () => {
+    const board: Board = [
+      { column: 'a', row: 8, figure: 'ROOK', color: 'black' },
+      { column: 'b', row: 8, figure: 'KNIGHT', color: 'black' },
+      { column: 'c', row: 8, figure: 'BISHOP', color: 'black' },
+      { column: 'd', row: 8, figure: 'QUEEN', color: 'black' },
+      { column: 'e', row: 8, figure: 'KING', color: 'black' },
+      { column: 'f', row: 8, figure: 'BISHOP', color: 'black' },
+      { column: 'g', row: 8, figure: 'KNIGHT', color: 'black' },
+      { column: 'h', row: 8, figure: 'ROOK', color: 'black' },
+      { column: 'a', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'b', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'c', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'd', row: 6, figure: 'PAWN', color: 'black' },
+      { column: 'e', row: 5, figure: 'PAWN', color: 'black' },
+      { column: 'f', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'g', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'h', row: 7, figure: 'PAWN', color: 'black' },
+      { column: 'e', row: 4, figure: 'PAWN', color: 'white' },
+      { column: 'd', row: 3, figure: 'PAWN', color: 'white' },
+      { column: 'a', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'b', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'c', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'f', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'g', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'h', row: 2, figure: 'PAWN', color: 'white' },
+      { column: 'a', row: 1, figure: 'ROOK', color: 'white' },
+      { column: 'b', row: 1, figure: 'KNIGHT', color: 'white' },
+      { column: 'c', row: 1, figure: 'BISHOP', color: 'white' },
+      { column: 'd', row: 1, figure: 'QUEEN', color: 'white' },
+      { column: 'e', row: 1, figure: 'KING', color: 'white' },
+      { column: 'f', row: 1, figure: 'BISHOP', color: 'white' },
+      { column: 'g', row: 1, figure: 'KNIGHT', color: 'white' },
+      { column: 'h', row: 1, figure: 'ROOK', color: 'white' },
+    ];
+    const fen = createFenFromChessBoard(board);
+    expect(fen).toBe('rnbqkbnr/ppp2ppp/3p4/4p3/4P3/3P4/PPP2PPP/RNBQKBNR w KQkq - 0 1');
+  });
 });
